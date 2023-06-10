@@ -1,0 +1,11 @@
+<idea-plugin>
+    <extensions defaultExtensionNs="com.zelaux.numberconverter">
+        <numberTypeProvider language="Rust"
+                            implementationClass="com.zelaux.numberconverter.extensions.bitshift.TwoOnlyBitShift"/>
+        <radixNumberTypeProvider language="Rust"
+                                 implementationClass="com.zelaux.numberconverter.extensions.radix.SecondRadix"/>
+
+
+    </extensions>
+
+</idea-plugin>

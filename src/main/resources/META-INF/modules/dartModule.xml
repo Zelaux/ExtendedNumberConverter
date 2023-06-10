@@ -1,0 +1,8 @@
+<idea-plugin>
+    <extensions defaultExtensionNs="com.zelaux.numberconverter">
+        <numberTypeProvider language="Dart"
+                            implementationClass="com.zelaux.numberconverter.extensions.bitshift.DefaultBitShift"/>
+        <radixNumberTypeProvider language="Dart"
+                            implementationClass="com.zelaux.numberconverter.extensions.radix.OnsupportRadix"/>
+    </extensions>
+</idea-plugin>

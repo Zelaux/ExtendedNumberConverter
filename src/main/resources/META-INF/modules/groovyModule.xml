@@ -1,0 +1,6 @@
+<idea-plugin>
+    <extensions defaultExtensionNs="com.zelaux.numberconverter">
+        <numberTypeProvider language="Groovy"
+                            implementationClass="com.zelaux.numberconverter.extensions.bitshift.DefaultBitShift"/>
+    </extensions>
+</idea-plugin>

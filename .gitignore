@@ -1,3 +1,5 @@
 /NumberConverter.jar
 /out/
 /.idea/
+.gradle/
+build/

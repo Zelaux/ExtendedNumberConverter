@@ -1,0 +1,8 @@
+<idea-plugin>
+    <extensions defaultExtensionNs="com.zelaux.numberconverter">
+        <numberTypeProvider language="PHP"
+                            implementationClass="com.zelaux.numberconverter.extensions.bitshift.TwoOnlyBitShift"/>
+        <radixNumberTypeProvider language="PHP"
+                                 implementationClass="com.zelaux.numberconverter.extensions.radix.BothRadixModule"/>
+    </extensions>
+</idea-plugin>

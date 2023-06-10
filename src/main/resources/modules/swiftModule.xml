@@ -1,0 +1,6 @@
+<idea-plugin>
+    <extensions defaultExtensionNs="com.zelaux.numberconverter">
+        <numberTypeProvider language="Dart"
+                            implementationClass="de.endrullis.idea.postfixtemplates.languages.dart.DartPostfixTemplateProvider"/>
+    </extensions>
+</idea-plugin>
