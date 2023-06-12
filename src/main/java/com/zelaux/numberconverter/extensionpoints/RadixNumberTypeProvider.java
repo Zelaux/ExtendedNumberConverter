@@ -1,11 +1,13 @@
 package com.zelaux.numberconverter.extensionpoints;
 
-import com.intellij.lang.Language;
 import com.intellij.lang.LanguageExtension;
 import com.intellij.lang.LanguageExtensionPoint;
 import com.intellij.openapi.extensions.ExtensionPointName;
+import com.zelaux.numberconverter.NumberContainer;
 import com.zelaux.numberconverter.numbertype.NumberType;
 import com.zelaux.numberconverter.numbertype.DefaultRadixNumberType;
+import com.zelaux.numberconverter.numbertype.PsiResult;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.math.BigInteger;
@@ -25,8 +27,7 @@ public interface RadixNumberTypeProvider {
     default NumberType octal() {
         return DefaultRadixNumberType.octal;
     }
-
-    @Nullable
+@NotNull
     default NumberType decimal() {
         return DefaultRadixNumberType.decimal;
     }
@@ -36,50 +37,50 @@ public interface RadixNumberTypeProvider {
         return DefaultRadixNumberType.binary;
     }
 
-    class RadixNumberTypeImpl implements NumberType {
-        public final String name;
+    class RadixNumberTypeImpl implements NumberType, NumberType.MatchByPattern {
+        public final DefaultRadixNumberType parentType;
         public final Pattern pattern;
         public final String prefix;
         public final String postfix;
-        public final int radix;
         public final boolean isDecimal;
 
-        public RadixNumberTypeImpl(String name, Pattern pattern, String prefix, int radix) {
-            this(name, pattern, prefix, "", radix);
+        @Override
+        public String title() {
+            return parentType.name();
         }
 
-        public RadixNumberTypeImpl(String name, Pattern pattern, String prefix, String postfix, int radix) {
-            this.name = name;
+        public RadixNumberTypeImpl(DefaultRadixNumberType parentType, Pattern pattern, String prefix) {
+            this(parentType, pattern, prefix, "");
+        }
+
+        public RadixNumberTypeImpl(DefaultRadixNumberType parentType, Pattern pattern, String prefix, String postfix) {
+            this.parentType = parentType;
             this.pattern = Pattern.compile("-?" + pattern.pattern());
             this.prefix = prefix;
             this.postfix = postfix;
-            this.radix = radix;
-            isDecimal = radix == 10;
+            isDecimal=parentType.isDecimal();
         }
 
         @Override
-        public String toString() {
-            return name;
+        public Pattern pattern() {
+            return pattern;
         }
 
-        @Override
-        public boolean match(String value, Language language) {
-            return pattern.matcher(value).matches();
-        }
 
         @Override
-        public BigInteger parse(String value, Language language) {
+        public BigInteger parse(NumberContainer container, int inElementStart, int inElementEnd) {
+            String value = container.getText(inElementStart, inElementEnd);
             if (value.charAt(0) == '-') {
-                value = '-' + value.substring(prefix.length() + 1,value.length()-postfix.length());
+                value = '-' + value.substring(prefix.length() + 1, value.length() - postfix.length());
             } else {
-                value = value.substring(prefix.length(),value.length()-postfix.length());
+                value = value.substring(prefix.length(), value.length() - postfix.length());
 
             }
-            return new BigInteger(value, radix);
+            return new BigInteger(value, parentType.radix);
         }
 
         @Override
-        public String wrap(BigInteger integer, Language language) {
+        public PsiResult wrap(NumberContainer container, BigInteger integer) {
 
             if (integer.signum() < 0 && isDecimal) {
                 int bitCount = integer.bitCount();
@@ -91,7 +92,7 @@ public interface RadixNumberTypeProvider {
 //            if (p2 > 32) p2 = 64;
                 integer = integer.add(BigInteger.ONE.shiftLeft(p2 * 2));
             }
-            return prefix + integer.toString(radix).toUpperCase() + postfix;
+            return container.psiFromText(prefix + integer.toString(parentType.radix).toUpperCase() + postfix);
         }
     }
 

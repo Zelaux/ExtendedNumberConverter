@@ -1,7 +1,7 @@
 package com.zelaux.numberconverter.numbertype;
 
 import com.intellij.lang.Language;
-import com.intellij.openapi.graph.view.RadialBackgroundRenderer;
+import com.zelaux.numberconverter.NumberContainer;
 import com.zelaux.numberconverter.extensionpoints.NumberTypeProvider;
 import com.zelaux.numberconverter.extensionpoints.RadixNumberTypeProvider;
 import org.jetbrains.annotations.NotNull;
@@ -79,6 +79,7 @@ class NumberTypeContainer {
 }
 
 public interface NumberType {
+    String title();
 
     final Pattern numberPattern = Pattern.compile("[1-9][0-9]*");
 
@@ -87,28 +88,40 @@ public interface NumberType {
     }
 
     @Nullable
-    public static NumberType of(String value, @Nullable Language language) {
-        if (language == null) language = Language.ANY;
-        ArrayList<NumberType> all = NumberTypeContainer.getTypes(language);
-        value = value.trim();
-        if (value.startsWith("-"))
-            value = value.substring(1);
-
-        if (value.equals("0") || numberPattern.matcher(value).matches()) return DefaultRadixNumberType.decimal;
+    public static NumberType of(NumberContainer value, int inElementStart, int inElementEnd) {
+        ArrayList<NumberType> all = NumberTypeContainer.getTypes(value.language);
+//        if (value.equals("0") || numberPattern.matcher(value).matches()) return DefaultRadixNumberType.decimal;
 //        value = value.toLowerCase();
         int size = all.size();
         for (int i = 0; i < size; i++) {
             NumberType system = all.get(i);
-            if (system.match(value, language)) {
+            if (system.match(value, inElementStart, inElementEnd)) {
                 return system;
             }
         }
         return null;
     }
 
-    boolean match(String value, Language language);
+    public static BigInteger parseStatic(NumberContainer value, int inElementStart, int inElementEnd) {
+        NumberType numberType = of(value, inElementStart, inElementEnd);
+        if (numberType == null) throw new NullPointerException();
+        return numberType.parse(value, inElementStart, inElementEnd);
+    }
 
-    BigInteger parse(String value, Language language);
+    boolean match(NumberContainer value, int inElementStart, int inElementEnd);
 
-    String wrap(BigInteger integer, Language language);
+    BigInteger parse(NumberContainer container, int inElementStart, int inElementEnd);
+
+    PsiResult wrap(NumberContainer container, BigInteger integer);
+
+
+    public interface MatchByPattern extends NumberType {
+        Pattern pattern();
+
+        @Override
+        default boolean match(NumberContainer value, int inElementStart, int inElementEnd) {
+            return pattern().matcher(value.getText(inElementStart, inElementEnd)).matches();
+        }
+    }
+
 }

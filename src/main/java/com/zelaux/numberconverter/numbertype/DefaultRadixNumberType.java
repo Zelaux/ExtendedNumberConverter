@@ -1,41 +1,50 @@
 package com.zelaux.numberconverter.numbertype;
 
-import com.intellij.lang.Language;
+import com.zelaux.numberconverter.NumberContainer;
+import org.intellij.lang.annotations.Language;
 
 import java.math.BigInteger;
 import java.util.regex.Pattern;
 
-public enum DefaultRadixNumberType implements NumberType {
-    binary("0[bB][01]+","0b", 2),
-    octal("0[0-7]+","0", 8),
-    decimal("(0|[1-9][0-9]*)","", 10),
-    hexadecimal("0[xX][0-9a-fA-F]+","0x", 16),
+public enum DefaultRadixNumberType implements
+        NumberType,
+        NumberType.MatchByPattern {
+    binary("Binary", "\\s*0[bB](_*[01])*\\s*", "0b", 2),
+    octal("Octal", "\\s*0[0-7](_*[0-7])*\\s*", "0", 8),
+    decimal("Decimal", "\\s*(0|[1-9](_*[0-9])*)\\s*", "", 10),
+    hexadecimal("Hex", "\\s*0[xX][0-9a-fA-F](_*[0-9a-fA-F])*\\s*", "0x", 16),
     ;
-    public final String name = name();
+    public final String title;
     public final Pattern pattern;
     public final String prefix;
     public final int radix;
 
+
     DefaultRadixNumberType(
-            @org.intellij.lang.annotations.Language("REGEXP")
-            String pattern, String prefix, int radix) {
+            String title, @Language("REGEXP")
+    String pattern, String prefix, int radix) {
+        this.title = title;
         this.pattern = Pattern.compile(pattern);
         this.prefix = prefix;
         this.radix = radix;
     }
 
+
     @Override
     public String toString() {
-        return name;
+        return getClass().getCanonicalName() + "#" + name();
+    }
+
+
+    @Override
+    public String title() {
+        return title;
     }
 
     @Override
-    public boolean match(String value, Language language) {
-        return pattern.matcher(value).matches();
-    }
+    public BigInteger parse(NumberContainer container, int inElementStart, int inElementEnd) {
 
-    @Override
-    public BigInteger parse(String value, Language language) {
+        String value = container.getText(inElementStart, inElementEnd).replace("_", "").trim();
         if (value.charAt(0) == '-') {
             value = '-' + value.substring(prefix.length() + 1);
         } else {
@@ -46,7 +55,7 @@ public enum DefaultRadixNumberType implements NumberType {
     }
 
     @Override
-    public String wrap(BigInteger integer, Language language) {
+    public PsiResult wrap(NumberContainer container, BigInteger integer) {
 
         if (integer.signum() < 0 && this != decimal) {
             int bitCount = integer.bitCount();
@@ -58,6 +67,11 @@ public enum DefaultRadixNumberType implements NumberType {
 //            if (p2 > 32) p2 = 64;
             integer = integer.add(BigInteger.ONE.shiftLeft(p2 * 2));
         }
-        return prefix + integer.toString(radix).toUpperCase();
+        return container.psiFromText(prefix + integer.toString(radix).toUpperCase());
+    }
+
+    @Override
+    public Pattern pattern() {
+        return pattern;
     }
 }

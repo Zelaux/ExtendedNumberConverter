@@ -1,1 +1,1 @@
-rootProject.name = "NumberConverter"
+rootProject.name = "ExtendedNumberConverter"

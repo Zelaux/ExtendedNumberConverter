@@ -32,22 +32,22 @@ intellij {
 
         listOf(
             "java",
-            "Pythonid:222.3345.118",//231.6890.12",
+//            "Pythonid:222.3345.118",//231.6890.12",
             "Kotlin",
-            "org.intellij.scala:2022.2.19",//2023.1.7",
-            "JavaScript",
-            //"CSS",
-            "Dart:222.4345.14",//231.6890.12",
-            "Groovy",
-//            "properties",
-            "org.jetbrains.plugins.ruby:222.3345.118",//231.6890.12",
-            "com.jetbrains.php:222.3345.118",//231.6890.12",
-//            "java-i18n",
-//            "DatabaseTools",
-            "org.rust.lang:0.4.186.5143-222",//0.4.188.5205-231",
-//            "org.toml.lang",
-            "org.jetbrains.plugins.go:222.3345.118",//231.6890.12",
-//            "nl.rubensten.texifyidea:0.7.26"
+//            "org.intellij.scala:2022.2.19",//2023.1.7",
+//            "JavaScript",
+//            //"CSS",
+//            "Dart:222.4345.14",//231.6890.12",
+//            "Groovy",
+////            "properties",
+//            "org.jetbrains.plugins.ruby:222.3345.118",//231.6890.12",
+//            "com.jetbrains.php:222.3345.118",//231.6890.12",
+////            "java-i18n",
+////            "DatabaseTools",
+//            "org.rust.lang:0.4.186.5143-222",//0.4.188.5205-231",
+////            "org.toml.lang",
+//            "org.jetbrains.plugins.go:222.3345.118",//231.6890.12",
+////            "nl.rubensten.texifyidea:0.7.26"
         )
     )
 }

@@ -147,7 +147,11 @@
                     class="com.zelaux.numberconverter.extensions.bitshift.AsOrProductAction" text="As Or Product">
 <!--                <keyboard-shortcut first-keystroke="control alt N" second-keystroke="B" keymap="$default"/>-->
             </action>
+<!--
 
+            <action id="com.zelaux.numberconverter.DebugAction" class="com.zelaux.numberconverter.actions.DebugAction"
+                    text="DebugAction"/>
+-->
             <add-to-group group-id="EditorPopupMenu" anchor="after" relative-to-action="EditorToggleColumnMode"/>
         </group>
 

@@ -3,6 +3,6 @@
         <numberTypeProvider language="kotlin"
                             implementationClass="com.zelaux.numberconverter.extensions.bitshift.KotlinBitShift"/>
         <radixNumberTypeProvider language="kotlin"
-                            implementationClass="com.zelaux.numberconverter.extensions.radix.NoOctalRadix"/>
+                            implementationClass="com.zelaux.numberconverter.extensions.radix.KotlinRadix"/>
     </extensions>
 </idea-plugin>

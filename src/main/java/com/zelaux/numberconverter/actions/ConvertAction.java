@@ -7,14 +7,16 @@ import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.*;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.*;
+import com.zelaux.numberconverter.NumberContainer;
 import com.zelaux.numberconverter.numbertype.NumberType;
-import com.zelaux.numberconverter.ParsedNumber;
 import com.zelaux.numberconverter.Result;
+import com.zelaux.numberconverter.numbertype.PsiResult;
+import com.zelaux.numberconverter.utils.PsiUtil;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class ConvertAction extends AnAction {
 
@@ -33,32 +35,64 @@ public class ConvertAction extends AnAction {
         this.type = type;
     }
 
-    public Result<ParsedNumber, String> parseNumber(String value, Language language) {
+    protected static class PsiElementAtCater {
+        public static PsiElement element;
+        public static int inElementStart, inElementEnd;
+
+        public static void reset() {
+            element = null;
+            inElementStart = -1;
+            inElementEnd = -1;
+        }
+
+        public static boolean trySet(PsiFile psiFile, Language language, Caret caret) {
+            int selectionStart = caret.getSelectionStart();
+            int selectionEnd = caret.getSelectionEnd()-1;
+            PsiElement element;
+            element = PsiUtil.getCommonPsi(psiFile, language, selectionStart, selectionEnd);
+            if (element == null) return false;
+            PsiElementAtCater.element=element;
+            inElementStart=0;
+            inElementEnd=element.getTextLength();
+//            inElementStart = selectionStart - element.getTextOffset();
+//            inElementEnd = selectionEnd - element.getTextOffset();
+            return true;
+        }
+
+    }
+
+    public Result<NumberContainer, String> parseNumber(PsiFile file, Caret caret, Language language) {
+
+        if (!PsiElementAtCater.trySet(file, language, caret)) {
+            String message = "(Cannot find target)";
+            return new Result.Error<>(message);
+        }
+        PsiElement element = PsiElementAtCater.element;
+        int inElementStart = PsiElementAtCater.inElementStart;
+        int inElementEnd = PsiElementAtCater.inElementEnd;
+        PsiElementAtCater.reset();
         try {
-            return new Result.Success<>(new ParsedNumber(value, language));
+            return new Result.Success<>(NumberContainer.create(element, inElementStart, inElementEnd, language));
         } catch (NumberFormatException e) {
-            String message = "(Cannot parse '" + value + "')";
+            String message = "(Cannot parse '" + element.getText() + "')";
             return new Result.Error<>(message);
         }
     }
 
-    @Nullable
-    private String findError(@NotNull List<Caret> caretList, Language language) {
 
-        Result<ParsedNumber, String> value = null;
+    private Result<NumberContainer, String> findError(PsiFile file, @NotNull List<Caret> caretList, Language language) {
+
+        Result<NumberContainer, String> value = null;
 
         for (Caret caret : caretList) {
-            value = parseNumber(caret.getSelectedText(), language);
+            value = parseNumber(file, caret, language);
+            PsiElementAtCater.reset();
             if (value.isError()) {
-                return value.getError();
+                return value;
             }
         }
 
-        return null;
-    }
-
-    private List<Caret> FilterCaretWithSelection(@NotNull List<Caret> caretList) {
-        return caretList.stream().filter(Caret::hasSelection).collect(Collectors.toList());
+        return value;
     }
 
     protected NumberType getType(Language language, @NotNull AnActionEvent anActionEvent) {
@@ -71,41 +105,57 @@ public class ConvertAction extends AnAction {
 
         final Document document = editor.getDocument();
 
-        final Language language = LanguageUtil.getFileLanguage(FileDocumentManager.getInstance().getFile(document));
+        VirtualFile virtualFile = FileDocumentManager.getInstance().getFile(document);
+        final Language language = LanguageUtil.getFileLanguage(virtualFile);
 
         final NumberType numberType = getType(language, anActionEvent);
         if (numberType == null) return;
         final Project project = anActionEvent.getRequiredData(CommonDataKeys.PROJECT);
 
         CaretModel caretModel = editor.getCaretModel();
-        List<Caret> caretList = FilterCaretWithSelection(caretModel.getAllCarets());
+        List<Caret> caretList = caretModel.getAllCarets();
 
-        WriteCommandAction.runWriteCommandAction(project, () ->
-                caretList.forEach(caret -> {
+        WriteCommandAction.runWriteCommandAction(project, () -> {
+            PsiFile psiFile = PsiManager.getInstance(project).findFile(virtualFile);
+            for (Caret caret : caretList) {//caret.getLeadSelectionPosition()
+                ;
 
-                    int selectionStart = caret.getSelectionStart();
-                    int selectionEnd = caret.getSelectionEnd();
-                    Result<ParsedNumber, String> convertedNumber = parseNumber(caret.getSelectedText(), language);
-                    ParsedNumber parsedNumber = convertedNumber.unwrap();
-                    if (parsedNumber != null) {
-                        document.replaceString(selectionStart, selectionEnd, parsedNumber.toString(numberType, language));
-                    }
+//                selectionStart-=
+                Result<NumberContainer, String> convertedNumber = parseNumber(psiFile, caret, language);
 
-                    caret.removeSelection();
-                    caret.moveToOffset(selectionStart);
+                NumberContainer container = convertedNumber.unwrap();
 
-                })
-        );
+                caret.removeSelection();
+                if (container != null) {
+                    PsiResult replacement = container.transformPsiElement(numberType);
+                    int elementOffset = container.element.getTextOffset();
+                    int beginOffset = container.inElementStart + elementOffset;
+                    int endOffset = container.inElementEnd + elementOffset;
+                    document.replaceString(beginOffset,endOffset,replacement.text());
+//                    convertedNumber.replace(replacement);
+//                    int textOffset = replacement.getTextOffset();
+                    caret.setSelection(beginOffset, beginOffset + replacement.textLength());
+                } else {
+                    caret.moveToOffset(caret.getSelectionStart());
+                }
+
+
+            }
+        });
     }
+
 
     @Override
     public void update(@NotNull AnActionEvent anActionEvent) {
         super.update(anActionEvent);
 
         final Editor editor = anActionEvent.getRequiredData(CommonDataKeys.EDITOR);
-        final Language language = LanguageUtil.getFileLanguage(anActionEvent.getData(PlatformDataKeys.VIRTUAL_FILE));
+        final VirtualFile virtualFile = anActionEvent.getData(PlatformDataKeys.VIRTUAL_FILE);
+        final Language language = LanguageUtil.getFileLanguage(virtualFile);
+        final Project project = anActionEvent.getRequiredData(CommonDataKeys.PROJECT);
+        final PsiFile psiFile = PsiManager.getInstance(project).findFile(virtualFile);
 
-        List<Caret> caretList = FilterCaretWithSelection(editor.getCaretModel().getAllCarets());
+        List<Caret> caretList = editor.getCaretModel().getAllCarets();
 
 
         anActionEvent.getPresentation().setEnabledAndVisible(!caretList.isEmpty());
@@ -113,20 +163,21 @@ public class ConvertAction extends AnAction {
             return;
         final NumberType numberType = getType(language, anActionEvent);
         if (numberType == null) return;
-        @Nullable
-        String error = findError(caretList, language);
-        StringBuilder text = new StringBuilder(numberType.toString());
-        if (error == null) {
+
+        Result<NumberContainer, String> error = findError(psiFile, caretList, language);
+        StringBuilder text = new StringBuilder(numberType.title());
+        if (!error.isError()) {
             if (caretList.size() == 1) {
-                text.append(" (" + new ParsedNumber(caretList.get(0).getSelectedText(), language).toString(numberType, language) + ")");
+                //noinspection DataFlowIssue
+                text.append(" (").append(error.unwrap().transformPsiElement(numberType).text()).append(")");
             } else {
-                text.append(" (carets " + caretList.size() + ")");
+                text.append(" (carets ").append(caretList.size()).append(")");
             }
         } else {
-            text.append(": " + error);
+            text.append(": ").append(error.getError());
         }
 
         anActionEvent.getPresentation().setText(text.toString());
-        anActionEvent.getPresentation().setEnabled(error == null);
+        anActionEvent.getPresentation().setEnabled(!error.isError());
     }
 }

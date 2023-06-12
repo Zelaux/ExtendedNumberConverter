@@ -1,73 +1,98 @@
 package com.zelaux.numberconverter.extensions.bitshift;
 
-import com.intellij.lang.Language;
+import com.zelaux.numberconverter.NumberContainer;
 import com.zelaux.numberconverter.numbertype.NumberType;
+import com.zelaux.numberconverter.numbertype.PsiResult;
 
+import java.math.BigInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class DefaultBitShift extends BitShiftNumberTypeProvider {
-    public static Pattern pattern = Pattern.compile("\\s*\\d+\\s*(<<|>>|>>>)\\s*\\d+\\s*");
-    public static Pattern center = Pattern.compile("(<<|>>|>>>)");
-    private static final String[] bitShiftTypeString;
-    private static final Pattern[] bitShiftTypePattern;
+    protected final BitShiftTypeExtra[] bitShiftTypeExtra;
 
-    static {
-        BitShiftType[] values = BitShiftType.values();
-        bitShiftTypeString = new String[values.length];
-        bitShiftTypePattern = new Pattern[values.length];
-        for (int i = 0; i < values.length; i++) {
-            switch (values[i]) {
 
-                case leftShift:
-                    bitShiftTypeString[i] = "<<";
-                    break;
-                case rightShift:
-                    bitShiftTypeString[i] = ">>";
-                    break;
-                case unsignedRightShift:
-                    bitShiftTypeString[i] = ">>>";
-                    break;
-            }
-            bitShiftTypePattern[i] = Pattern.compile("\\s*(" + bitShiftTypeString[i] + ")\\s*");
+    public DefaultBitShift(BitShiftTypeExtra[] bitShiftTypeExtra) {
+        this.bitShiftTypeExtra = bitShiftTypeExtra;
+    }
+
+    public DefaultBitShift() {
+        this(makeExtra("<<", ">>", ">>>"));
+    }
+
+    protected static class BitShiftTypeExtra {
+        public String literal;
+        public Pattern pattern;
+
+        public BitShiftTypeExtra() {
+        }
+
+        public BitShiftTypeExtra(String literal, Pattern pattern) {
+            this.literal = literal;
+            this.pattern = pattern;
         }
     }
 
+    protected static BitShiftTypeExtra[] makeExtra(String leftShift, String rightShift, String unsignedRightShift) {
+        BitShiftType[] values = BitShiftType.values();
+        BitShiftTypeExtra[] extras = new BitShiftTypeExtra[values.length];
+        for (int i = 0; i < values.length; i++) {
+            extras[i] = new BitShiftTypeExtra();
+            switch (values[i]) {
+
+                case leftShift:
+                    extras[i].literal = leftShift;
+                    break;
+                case rightShift:
+                    extras[i].literal = rightShift;
+                    break;
+                case unsignedRightShift:
+                    extras[i].literal = unsignedRightShift;
+                    break;
+            }
+            extras[i].pattern = Pattern.compile("\\s*(" + extras[i].literal + ")\\s*");
+        }
+        return extras;
+    }
+
     @Override
-    public boolean match(String value, BitShiftType bitShiftType, Language language) {
-        Matcher matcher = bitShiftTypePattern[bitShiftType.ordinal()].matcher(value);
+    public boolean matchShift(NumberContainer container, int inElementStart, int inElementEnd, BitShiftType bitShiftType) {
+        Matcher matcher = bitShiftTypeExtra[bitShiftType.ordinal()].pattern.matcher(
+                container.getText(inElementStart, inElementEnd)
+        );
         if (!matcher.find()) return false;
-        NumberType firstNumber = NumberType.of(value.substring(0, matcher.start()).trim().replace("_", ""), language);
+        NumberType firstNumber = NumberType.of(container,inElementStart,inElementStart+matcher.start()+1);
         if (firstNumber == null) return false;
-        NumberType secondNumber = NumberType.of(value.substring(matcher.end()).trim().replace("_", ""), language);
-        if (secondNumber == null) return false;
-        return true;
+        NumberType secondNumber = NumberType.of(container,inElementStart+matcher.end(),inElementEnd);
+        return secondNumber != null;
     }
 
     @SuppressWarnings({"ResultOfMethodCallIgnored", "DataFlowIssue"})
     @Override
-    public Result getShift(String value, BitShiftType bitShiftType, Language language) {
-        Matcher matcher = bitShiftTypePattern[bitShiftType.ordinal()].matcher(value);
+    public Result getShift(NumberContainer container, int inElementStart, int inElementEnd, BitShiftType bitShiftType) {
+        Matcher matcher = bitShiftTypeExtra[bitShiftType.ordinal()].pattern.matcher(
+                container.getText(inElementStart, inElementEnd)
+        );
         matcher.find();
-        String firstValue = value.substring(0, matcher.start()).trim().replace("_", "");
-        NumberType firstNumber = NumberType.of(firstValue, language);
-        String secondValue = value.substring(matcher.end()).trim().replace("_", "");
-        NumberType secondNumber = NumberType.of(secondValue, language);
-        return new Result(secondNumber.parse(secondValue, language).intValue(), firstNumber.parse(firstValue,language ));
+        BigInteger firstNumber = NumberType.parseStatic(container,inElementStart,inElementStart+matcher.start()+1);
+        BigInteger secondNumber = NumberType.parseStatic(container,inElementStart+matcher.end(),inElementEnd);
+        return new Result(secondNumber.intValue(), firstNumber);
     }
 
     @Override
-    public String wrapShift(String expression, int shift, BitShiftType bitShiftType) {
-        return expression + " " + bitShiftTypeString[bitShiftType.ordinal()] + " " + shift;
+    public PsiResult wrapShift(NumberContainer container, PsiResult expression, int shift, BitShiftType bitShiftType) {
+
+        return container.psiFromText(expression.text() + " " + bitShiftTypeExtra[bitShiftType.ordinal()].literal + " " + shift);
     }
 
     @Override
     public String orSeperator() {
-        return " | ";
+        return "|";
     }
 
     @Override
-    public void wrapOr(StringBuilder left, String right) {
-        left.append(" | ").append(right);
+    public PsiResult wrapOr(NumberContainer container, PsiResult left, PsiResult right) {
+//        left.append(" ").append(orSeperator()).append(" ").append(right);
+        return left.mutateText(left.text()+" "+orSeperator()+" "+right.text());
     }
 }

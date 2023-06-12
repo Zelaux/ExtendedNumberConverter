@@ -37,7 +37,7 @@ public class PopupChoiceAction extends MyEditorAction {
             protected Pair beforeWriteAction(Editor editor, DataContext dataContext) {
                 if (editor instanceof EditorEx) {
                     dataContext = ((EditorEx) editor).getDataContext();
-                }
+                }//Evaluate compile-time expression checked
                 ListPopup popup = JBPopupFactory.getInstance().createActionGroupPopup(null, (ActionGroup) CustomActionsSchema.getInstance().getCorrectedAction("NumberConverter.Group"),
                         dataContext, JBPopupFactory.ActionSelectionAid.ALPHA_NUMBERING, true);
 

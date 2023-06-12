@@ -36,7 +36,7 @@ class ConvertActionTest {
     private void assertTestData(NumberType system, TestData[] tests) {
         ConvertAction action = new ConvertAction(system);
         for (TestData test : tests) {
-            Result<ParsedNumber, String> actual = action.parseNumber(test.value, Language.ANY);
+            Result<NumberContainer, String> actual = action.parseNumber(test.value, , Language.ANY);
             assertEquals(test.expected, actual.isError() ? null : actual.unwrap(), test.error);
         }
     }

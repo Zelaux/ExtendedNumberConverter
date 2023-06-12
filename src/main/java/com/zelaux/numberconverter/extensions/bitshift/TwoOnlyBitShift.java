@@ -1,11 +1,13 @@
 package com.zelaux.numberconverter.extensions.bitshift;
 
-import com.intellij.lang.Language;
+import com.zelaux.numberconverter.NumberContainer;
 
 public class TwoOnlyBitShift extends DefaultBitShift {
+
+
     @Override
-    public boolean match(String value, BitShiftType bitShiftType, Language language) {
+    public boolean matchShift(NumberContainer container, int inElementStart, int inElementEnd, BitShiftType bitShiftType) {
         if (bitShiftType == BitShiftType.unsignedRightShift) return false;
-        return super.match(value, bitShiftType, language);
+        return super.matchShift(container, inElementStart, inElementEnd, bitShiftType);
     }
 }

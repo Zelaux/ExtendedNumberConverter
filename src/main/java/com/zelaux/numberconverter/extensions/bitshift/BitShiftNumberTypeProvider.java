@@ -1,14 +1,15 @@
 package com.zelaux.numberconverter.extensions.bitshift;
 
-import com.intellij.lang.Language;
 import com.intellij.openapi.actionSystem.AnAction;
+import com.zelaux.numberconverter.NumberContainer;
 import com.zelaux.numberconverter.extensionpoints.NumberTypeProvider;
 import com.zelaux.numberconverter.extensionpoints.RadixNumberTypeProvider;
 import com.zelaux.numberconverter.numbertype.DefaultRadixNumberType;
 import com.zelaux.numberconverter.numbertype.NumberType;
+import com.zelaux.numberconverter.numbertype.PsiResult;
+import org.jetbrains.annotations.NotNull;
 
 import java.math.BigInteger;
-import java.util.Optional;
 
 public abstract class BitShiftNumberTypeProvider implements NumberTypeProvider {
 //    leftShift(LanguageBitShiftProvider.BitShiftType.leftShift),
@@ -21,54 +22,55 @@ public abstract class BitShiftNumberTypeProvider implements NumberTypeProvider {
     public NumberType right = new BitShiftNumberType(BitShiftType.rightShift);
     public NumberType unsignedRight = new BitShiftNumberType(BitShiftType.unsignedRightShift);
     public NumberType or = new OrProductNumberType();
+
     protected class OrProductNumberType implements NumberType {
         @Override
-        public String toString() {
-            return "or product";
+        public String title() {
+            return "OrProduct";
         }
 
         @Override
-        public boolean match(String value, Language language) {
+        public boolean match(NumberContainer container, int inElementStart, int inElementEnd) {
+            String value=container.getText(inElementStart, inElementEnd);
             int index = value.indexOf(orSeperator());
             if (index == -1) return false;
-            String leftString = value.substring(0, index);
-            NumberType left = NumberType.of(leftString, language);
+            NumberType left = NumberType.of(container, inElementStart,inElementStart+index);
             if (left == null) return false;
-            String rightString = value.substring(index+1);
-            NumberType right = NumberType.of(rightString, language);
+            NumberType right = NumberType.of(container, inElementStart+index+1,inElementEnd);
             if (right == null) return false;
             return true;
         }
 
         @Override
-        public BigInteger parse(String value, Language language) {
+        public BigInteger parse(NumberContainer container, int inElementStart, int inElementEnd) {
+            String value=container.getText(inElementStart, inElementEnd);
             int index = value.indexOf(orSeperator());
-            String leftString = value.substring(0, index);
-            NumberType left = NumberType.of(leftString, language);
-            String rightString = value.substring(index+1);
-            NumberType right = NumberType.of(rightString, language);
-            return left.parse(leftString, language).or(right.parse(rightString, language));
+            NumberType left = NumberType.of(container, inElementStart,inElementStart+index);
+            NumberType right = NumberType.of(container, inElementStart+index+1,inElementEnd);
+            return left.parse(container, inElementStart,inElementStart+index)
+                    .or(
+                            right.parse(container, inElementStart+index+1,inElementEnd)
+                    );
         }
 
         @Override
-        public String wrap(BigInteger integer, Language language) {
-            if (integer.equals(BigInteger.ZERO)) return "0";
+        public PsiResult wrap(NumberContainer container, BigInteger integer) {
+            if (integer.equals(BigInteger.ZERO)) return container.psiFromText("0");
             int length = integer.bitLength();
             int offset = integer.getLowestSetBit();
-            StringBuilder builder = new StringBuilder((length - offset + 1) * 3);
-            for (int i = length; i >= offset; i--) {
+            PsiResult ONE = container.psiFromText("1");
+            PsiResult begin=wrapShift(container, ONE, offset, BitShiftType.leftShift);
+            for (int i = offset+1; i <= length; i++) {
                 if (integer.testBit(i)) {
-                    String wrapped = wrapShift("1", i, BitShiftType.leftShift);
-                    if (builder.length() == 0) {
-                        builder.append(wrapped);
-                    } else {
-                        wrapOr(builder, wrapped);
-                    }
+                    PsiResult wrapped = wrapShift(container, ONE.copy(), i, BitShiftType.leftShift);
+                    begin= wrapOr(container, begin, wrapped);
                 }
             }
-            return builder.toString();
+            return begin;
         }
-    };
+    }
+
+    ;
 
     protected BitShiftNumberTypeProvider() {
         if (first) {
@@ -85,10 +87,15 @@ public abstract class BitShiftNumberTypeProvider implements NumberTypeProvider {
         };
     }
 
-    protected final NumberType[] numberTypes = {
-            or,
-            left, right, unsignedRight
-    };
+    protected final NumberType[] numberTypes = generateNumberTypes();
+
+    @NotNull
+    protected NumberType[] generateNumberTypes() {
+        return new NumberType[]{
+                or,
+                left, right, unsignedRight
+        };
+    }
 
     @Override
     public NumberType[] getNumberTypes() {
@@ -99,7 +106,7 @@ public abstract class BitShiftNumberTypeProvider implements NumberTypeProvider {
         public final BitShiftType bitShiftType;
 
         @Override
-        public String toString() {
+        public String title() {
             return bitShiftType.name();
         }
 
@@ -108,13 +115,13 @@ public abstract class BitShiftNumberTypeProvider implements NumberTypeProvider {
         }
 
         @Override
-        public boolean match(String value, Language language) {
-            return BitShiftNumberTypeProvider.this.match(value, bitShiftType, language);
+        public boolean match(NumberContainer value, int inElementStart, int inElementEnd) {
+            return BitShiftNumberTypeProvider.this.matchShift(value, inElementStart, inElementEnd, bitShiftType);
         }
 
         @Override
-        public BigInteger parse(String value, Language language) {
-            Result result = BitShiftNumberTypeProvider.this.getShift(value, bitShiftType, language);
+        public BigInteger parse(NumberContainer container, int inElementStart, int inElementEnd) {
+            Result result = BitShiftNumberTypeProvider.this.getShift(container, inElementStart, inElementEnd, bitShiftType);
             BigInteger number = result.valueToShift;
             int shift = result.shift;
             switch (bitShiftType) {
@@ -141,41 +148,28 @@ public abstract class BitShiftNumberTypeProvider implements NumberTypeProvider {
         }
 
         @Override
-        public String wrap(BigInteger integer, Language language) {
-            int length = integer.bitLength();
+        public PsiResult wrap(NumberContainer container, BigInteger integer) {
             int offset = integer.getLowestSetBit();
-            StringBuilder builder = new StringBuilder(length - offset + 1 + 2);
-            NumberType mapper = Optional.ofNullable(RadixNumberTypeProvider.LANG_EP.forLanguage(language))
-                    .map(it -> {
-                        NumberType binary = it.binary();
-                        return binary == null ? it.decimal() : binary;
-                    }).map(it -> it == DefaultRadixNumberType.binary ? null : it).orElse(null);
-            if (mapper == null) builder.append("0b");
-            int startLen = builder.length();
-            for (int i = length; i >= offset; i--) {
-                if (integer.testBit(i)) {
-                    builder.append('1');
-                } else if (builder.length() > startLen) {
-                    builder.append('0');
-                }
-            }
-            if (builder.length() == 0) builder.append("0");
-            if (builder.length() == startLen) builder.setLength(1);
-            if (mapper != null && builder.length() > 1) {
-                BigInteger bigInteger = new BigInteger(builder.toString(), 2);
-                builder.setLength(0);
-                builder.append(mapper.wrap(bigInteger, language));
-            }
-            return BitShiftNumberTypeProvider.this.wrapShift(builder.toString(), offset, BitShiftType.leftShift);
+            NumberType mapper = getBinary(container);
+            PsiResult wrapped = mapper.wrap(container, integer.shiftRight(offset));
+            return BitShiftNumberTypeProvider.this.wrapShift(container, wrapped, offset, BitShiftType.leftShift);
+        }
+@NotNull
+        private NumberType getBinary(NumberContainer container) {
+            RadixNumberTypeProvider value = RadixNumberTypeProvider.LANG_EP.forLanguage(container.language);
+            if(value==null)return DefaultRadixNumberType.binary;
+    NumberType binary = value.binary();
+    if(binary==null)return value.decimal();
+    return binary;
         }
     }
 
 
-    public abstract boolean match(String value, BitShiftType bitShiftType, Language language);
+    public abstract boolean matchShift(NumberContainer container, int inElementStart, int inElementEnd, BitShiftType bitShiftType);
 
-    public abstract Result getShift(String value, BitShiftType bitShiftType, Language language);
+    public abstract Result getShift(NumberContainer container, int inElementStart, int inElementEnd, BitShiftType bitShiftType);
 
-    class Result {
+   public static class Result {
         int shift;
         BigInteger valueToShift;
 
@@ -186,7 +180,9 @@ public abstract class BitShiftNumberTypeProvider implements NumberTypeProvider {
     }
 
 
-    public abstract String wrapShift(String expression, int shift, BitShiftType bitShiftType);
+    public abstract PsiResult wrapShift(NumberContainer container, PsiResult expression, int shift, BitShiftType bitShiftType);
+
     public abstract String orSeperator();
-    public abstract void wrapOr(StringBuilder left, String right);
+
+    public abstract PsiResult wrapOr(NumberContainer container, PsiResult left, PsiResult right);
 }
