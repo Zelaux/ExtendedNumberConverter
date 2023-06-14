@@ -6,7 +6,7 @@ import org.jetbrains.annotations.Nullable;
 
 public class NoOctalRadix implements RadixNumberTypeProvider {
     @Override
-    public @Nullable NumberType octal() {
+    public @Nullable NumberType.RadixType octal() {
         return null;
     }
 }

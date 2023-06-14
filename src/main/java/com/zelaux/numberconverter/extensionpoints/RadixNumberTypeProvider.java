@@ -3,6 +3,7 @@ package com.zelaux.numberconverter.extensionpoints;
 import com.intellij.lang.LanguageExtension;
 import com.intellij.lang.LanguageExtensionPoint;
 import com.intellij.openapi.extensions.ExtensionPointName;
+import com.intellij.util.IntPair;
 import com.zelaux.numberconverter.NumberContainer;
 import com.zelaux.numberconverter.numbertype.NumberType;
 import com.zelaux.numberconverter.numbertype.DefaultRadixNumberType;
@@ -19,25 +20,26 @@ public interface RadixNumberTypeProvider {
     LanguageExtension<RadixNumberTypeProvider> LANG_EP = new LanguageExtension<>(EP_NAME.getName());
 
     @Nullable
-    default NumberType hexadecimal() {
+    default NumberType.RadixType hexadecimal() {
         return DefaultRadixNumberType.hexadecimal;
     }
 
     @Nullable
-    default NumberType octal() {
+    default NumberType.RadixType octal() {
         return DefaultRadixNumberType.octal;
     }
-@NotNull
-    default NumberType decimal() {
+
+    @NotNull
+    default NumberType.RadixType decimal() {
         return DefaultRadixNumberType.decimal;
     }
 
     @Nullable
-    default NumberType binary() {
+    default NumberType.RadixType binary() {
         return DefaultRadixNumberType.binary;
     }
 
-    class RadixNumberTypeImpl implements NumberType, NumberType.MatchByPattern {
+    class RadixNumberTypeImpl implements NumberType, NumberType.RadixType, NumberType.MatchByPattern {
         public final DefaultRadixNumberType parentType;
         public final Pattern pattern;
         public final String prefix;
@@ -58,7 +60,7 @@ public interface RadixNumberTypeProvider {
             this.pattern = Pattern.compile("-?" + pattern.pattern());
             this.prefix = prefix;
             this.postfix = postfix;
-            isDecimal=parentType.isDecimal();
+            isDecimal = parentType.isDecimal();
         }
 
         @Override
@@ -93,6 +95,17 @@ public interface RadixNumberTypeProvider {
                 integer = integer.add(BigInteger.ONE.shiftLeft(p2 * 2));
             }
             return container.psiFromText(prefix + integer.toString(parentType.radix).toUpperCase() + postfix);
+        }
+
+        @Override
+        public IntPair numberContentRange(NumberContainer container, int inElementStart, int inElementEnd) {
+            String text = container.getText(inElementStart, inElementEnd);
+            return RadixType.clearWhiteSpaces(text, prefix.length(), postfix.length());
+        }
+
+        @Override
+        public String wrapUnderScore(String numberWithUnderScore) {
+            return prefix + numberWithUnderScore + postfix;
         }
     }
 

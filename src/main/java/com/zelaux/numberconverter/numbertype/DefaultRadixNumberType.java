@@ -1,6 +1,8 @@
 package com.zelaux.numberconverter.numbertype;
 
+import com.intellij.util.IntPair;
 import com.zelaux.numberconverter.NumberContainer;
+import com.zelaux.numberconverter.settings.MySettingsState;
 import org.intellij.lang.annotations.Language;
 
 import java.math.BigInteger;
@@ -8,25 +10,43 @@ import java.util.regex.Pattern;
 
 public enum DefaultRadixNumberType implements
         NumberType,
-        NumberType.MatchByPattern {
-    binary("Binary", "\\s*0[bB](_*[01])*\\s*", "0b", 2),
-    octal("Octal", "\\s*0[0-7](_*[0-7])*\\s*", "0", 8),
-    decimal("Decimal", "\\s*(0|[1-9](_*[0-9])*)\\s*", "", 10),
-    hexadecimal("Hex", "\\s*0[xX][0-9a-fA-F](_*[0-9a-fA-F])*\\s*", "0x", 16),
+        NumberType.MatchByPattern,
+        NumberType.RadixType {
+    binary("Binary", "\\s*0[bB](_*[01])*\\s*", "0b", 2, it -> it.binarySeparator),
+    octal("Octal", "\\s*0[0-7](_*[0-7])*\\s*", "0", 8, it -> it.octalSeparator),
+    decimal("Decimal", "\\s*(0|[1-9](_*[0-9])*)\\s*", "", 10, it -> it.decimalSeparator),
+    hexadecimal("Hex", "\\s*0[xX][0-9a-fA-F](_*[0-9a-fA-F])*\\s*", "0x", 16, it -> it.hexSeparator),
     ;
+    public final ToInt<MySettingsState> spacing;
     public final String title;
     public final Pattern pattern;
     public final String prefix;
     public final int radix;
 
+    @SuppressWarnings("StatementWithEmptyBody")
+    public IntPair numberContentRange(NumberContainer container, int inElementStart, int inElementEnd) {
+        String text = container.getText(inElementStart, inElementEnd);
+        return RadixType.clearWhiteSpaces(text, prefix.length(), 0);
+    }
+
+    @Override
+    public String wrapUnderScore(String numberWithUnderScore) {
+        return prefix+numberWithUnderScore;
+    }
+
+
+    interface ToInt<T> {
+        int get(T t);
+    }
 
     DefaultRadixNumberType(
             String title, @Language("REGEXP")
-    String pattern, String prefix, int radix) {
+    String pattern, String prefix, int radix, ToInt<MySettingsState> spacing) {
         this.title = title;
         this.pattern = Pattern.compile(pattern);
         this.prefix = prefix;
         this.radix = radix;
+        this.spacing = spacing;
     }
 
 
@@ -67,11 +87,16 @@ public enum DefaultRadixNumberType implements
 //            if (p2 > 32) p2 = 64;
             integer = integer.add(BigInteger.ONE.shiftLeft(p2 * 2));
         }
-        return container.psiFromText(prefix + integer.toString(radix).toUpperCase());
+        String process = MySettingsState.getInstance().outputCase.process(integer.toString(radix));
+        return container.psiFromText(prefix + process);
     }
 
     @Override
     public Pattern pattern() {
         return pattern;
+    }
+
+    public int underScoreSpacing() {
+        return spacing.get(MySettingsState.getInstance());
     }
 }

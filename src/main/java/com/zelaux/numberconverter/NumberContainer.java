@@ -7,6 +7,7 @@ import com.zelaux.numberconverter.numbertype.PsiResult;
 import org.jetbrains.annotations.Nullable;
 
 import java.math.BigInteger;
+import java.util.stream.Stream;
 
 public final class NumberContainer {
     //	boolean negative;
@@ -23,7 +24,10 @@ public final class NumberContainer {
     public final Language language;
     private NumberType currentSystem;
 
-//	BigInteger integer;
+    public NumberType currentSystem() {
+        return currentSystem;
+    }
+    //	BigInteger integer;
 
     private NumberContainer(PsiElement element, int inElementStart, int inElementEnd, Language language) {
         this.element = element;
@@ -37,6 +41,24 @@ public final class NumberContainer {
         NumberContainer container = new NumberContainer(element, inElementStart, inElementEnd, language);
         container.currentSystem = NumberType.of(container, inElementStart, inElementEnd);
         if (container.currentSystem == null) return null;
+        return container;
+    }
+    @Nullable
+    public static NumberContainer createOrNull(PsiElement element, int inElementStart, int inElementEnd, Language language, Stream<NumberType> numberTypeStream) {
+        NumberContainer container = new NumberContainer(element, inElementStart, inElementEnd, language);
+        container.currentSystem = NumberType.of(container, inElementStart, inElementEnd,numberTypeStream);
+        if (container.currentSystem == null) return null;
+        return container;
+    }
+
+    public static NumberContainer unsafeCreationUnsafeCreationUnsafeCreation(PsiElement element,
+                                                                             int inElementStart,
+                                                                             int inElementEnd,
+                                                                             Language language,
+                                                                             NumberType currentSystem) {
+        NumberContainer container = new NumberContainer(element, inElementStart, inElementEnd, language);
+
+        container.currentSystem = currentSystem;
         return container;
     }
 

@@ -26,10 +26,6 @@ public abstract class MyEditorAction extends EditorAction {
         super(defaultHandler);
     }
 
-    protected Class getActionClass() {
-        return getClass();
-    }
-
     ///from TextComponentEditorAction
     @Override
     @Nullable

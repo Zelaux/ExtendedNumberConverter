@@ -1,11 +1,10 @@
 <idea-plugin  xmlns:xi="http://www.w3.org/2001/XInclude">
     <id>com.zelaux.numberconverter</id>
-    <name>Number Converter</name>
+    <name>Number Manipulation</name>
     <version>1.6.0</version>
     <vendor url="https://github.com/Zelaux">Zelaux</vendor>
 
     <description><![CDATA[
-        Extended version of https://github.com/dethlex/NumberConverter
 
 		The plugin to convert numbers from one numeral system to another in any JetBrains IDE.
 		For floating point numbers, the fractional part will be discarded.
@@ -64,6 +63,9 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <!-- Add your extensions here -->
+        <applicationConfigurable parentId="tools" instance="com.zelaux.numberconverter.settings.MySettingsConfigurable"
+                                 id="settings.NumberTransformSettingsConfigurable"/>
+        <applicationService serviceImplementation="com.zelaux.numberconverter.settings.MySettingsState"/>
     </extensions>
 
 
@@ -83,7 +85,6 @@
     <!--	<depends optional="true" config-file="modules/swiftModule.xml">Swift</depends>-->
 
 
-<!--    <xi:include href="/META-INF/plugin_extensions_points.xml" xpointer="xpointer(/idea-plugin/*)"/>-->
 
     <extensionPoints>
         <!-- <extensionPoint name="languageBitShiftOperatorProvider"
@@ -94,7 +95,7 @@
                         dynamic="true"
                         beanClass="com.intellij.lang.LanguageExtensionPoint">
             <with attribute="implementationClass"
-                  implements="com.zelaux.numberconverter.extensionpoints.NumberTypeProvider"/>
+                  implements="com.zelaux.numberconverter.extensionpoints.NumberTypeProvider$Test"/>
         </extensionPoint>
         <extensionPoint name="radixNumberTypeProvider"
                         dynamic="true"
@@ -102,59 +103,11 @@
             <with attribute="implementationClass"
                   implements="com.zelaux.numberconverter.extensionpoints.RadixNumberTypeProvider"/>
         </extensionPoint>
+        <extensionPoint name="actionGroupPopup"
+                        beanClass="com.zelaux.numberconverter.extensionpoints.PopupChoiceBean">
+        </extensionPoint>
+
     </extensionPoints>
-    <actions>
-
-        <action id="com.zelaux.numberconverter.PopupChoiceAction"
-                class="osmedile.intellij.stringmanip.PopupChoiceAction"
-                text="Popup String Manipulation ..."
-                description="Popup Number Converter ..."
-                icon="pluginIcon.svg">
-            <add-to-group group-id="EditMenu" anchor="last"/>
-            <keyboard-shortcut keymap="$default" first-keystroke="alt shift N"/>
-            <keyboard-shortcut keymap="$default" first-keystroke="alt N"/>
-        </action>
-        <group
-                id="NumberConverter.Group"
-                popup="true"
-                text="Convert Number to..."
-                description="Convert to different numeral system"
-                icon="/menu_icon.png"
-        >
-
-            <action id="NumberConverter.Group.Dec"
-                    class="com.zelaux.numberconverter.extensions.radix.RadixAction$DecicalConvertAction" text="To Decimal">
-                <keyboard-shortcut first-keystroke="control alt N" second-keystroke="D" keymap="$default"/>
-            </action>
-            <action id="NumberConverter.Group.Hex"
-                    class="com.zelaux.numberconverter.extensions.radix.RadixAction$HexadecimalConvertAction"
-                    text="To Hexadecimal">
-                <keyboard-shortcut first-keystroke="control alt N" second-keystroke="H" keymap="$default"/>
-            </action>
-            <action id="NumberConverter.Group.Oct"
-                    class="com.zelaux.numberconverter.extensions.radix.RadixAction$OctalConvertAction" text="To Octal">
-                <keyboard-shortcut first-keystroke="control alt N" second-keystroke="O" keymap="$default"/>
-            </action>
-            <action id="NumberConverter.Group.Bin"
-                    class="com.zelaux.numberconverter.extensions.radix.RadixAction$BinaryConvertAction" text="To Binary">
-                <keyboard-shortcut first-keystroke="control alt N" second-keystroke="B" keymap="$default"/>
-            </action>
-            <action id="NumberConverter.Group.BitShift"
-                    class="com.zelaux.numberconverter.extensions.bitshift.BitShiftAction" text="As Shifted Bits">
-<!--                <keyboard-shortcut first-keystroke="control alt N" second-keystroke="B" keymap="$default"/>-->
-            </action>
-            <action id="NumberConverter.Group.AsOrProduct"
-                    class="com.zelaux.numberconverter.extensions.bitshift.AsOrProductAction" text="As Or Product">
-<!--                <keyboard-shortcut first-keystroke="control alt N" second-keystroke="B" keymap="$default"/>-->
-            </action>
-<!--
-
-            <action id="com.zelaux.numberconverter.DebugAction" class="com.zelaux.numberconverter.actions.DebugAction"
-                    text="DebugAction"/>
--->
-            <add-to-group group-id="EditorPopupMenu" anchor="after" relative-to-action="EditorToggleColumnMode"/>
-        </group>
-
-    </actions>
-
+    <xi:include href="/META-INF/plugin_extensions.xml" xpointer="xpointer(/idea-plugin/*)"/>
+    <xi:include href="/META-INF/actions.xml" xpointer="xpointer(/idea-plugin/*)"/>
 </idea-plugin>

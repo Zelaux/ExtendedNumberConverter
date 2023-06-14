@@ -8,12 +8,12 @@ import org.jetbrains.annotations.Nullable;
 import java.util.regex.Pattern;
 
 public class SecondRadix implements RadixNumberTypeProvider {
-    public final NumberType octal = new RadixNumberTypeImpl(
+    public final NumberType.RadixType octal = new RadixNumberTypeImpl(
             DefaultRadixNumberType.octal, Pattern.compile("0o[0-7]"), "0o"
     );
 
     @Override
-    public @Nullable NumberType octal() {
+    public @Nullable NumberType.RadixType octal() {
         return octal;
     }
 }

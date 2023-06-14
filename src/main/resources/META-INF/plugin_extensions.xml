@@ -1,0 +1,18 @@
+<idea-plugin>
+    <extensions defaultExtensionNs="com.zelaux.numberconverter">
+        <actionGroupPopup
+                text="Popup Number Manipulation ..."
+                description="Popup number manipulation ..."
+                actionGroup="NumberManipulation.Group">
+            <keyboard-shortcut keymap="$default" first-keystroke="alt shift N"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="alt N"/>
+        </actionGroupPopup>
+
+        <!--
+                first-keystroke="alt N"-->
+    </extensions>
+    <extensions defaultExtensionNs="com.intellij">
+        <actionConfigurationCustomizer
+                implementation="com.zelaux.numberconverter.extensions.customizers.PopupChoiceActionConfiguration"/>
+    </extensions>
+</idea-plugin>

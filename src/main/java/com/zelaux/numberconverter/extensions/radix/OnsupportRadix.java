@@ -6,18 +6,18 @@ import org.jetbrains.annotations.Nullable;
 
 public class OnsupportRadix implements RadixNumberTypeProvider {
     @Override
-    public @Nullable NumberType hexadecimal() {
+    public @Nullable NumberType.RadixType hexadecimal() {
         return null;
     }
 
     @Override
-    public @Nullable NumberType octal() {
+    public @Nullable NumberType.RadixType octal() {
         return null;
     }
 
 
     @Override
-    public @Nullable NumberType binary() {
+    public @Nullable NumberType.RadixType binary() {
         return null;
     }
 }

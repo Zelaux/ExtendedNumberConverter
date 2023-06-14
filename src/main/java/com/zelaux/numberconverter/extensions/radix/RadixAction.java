@@ -1,12 +1,10 @@
 package com.zelaux.numberconverter.extensions.radix;
 
 import com.intellij.lang.Language;
-import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.zelaux.numberconverter.actions.ConvertAction;
 import com.zelaux.numberconverter.extensionpoints.RadixNumberTypeProvider;
 import com.zelaux.numberconverter.numbertype.DefaultRadixNumberType;
 import com.zelaux.numberconverter.numbertype.NumberType;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Function;
 
@@ -19,15 +17,15 @@ public abstract class RadixAction extends ConvertAction {
     }
 
     @Override
-    protected NumberType getType(Language language, @NotNull AnActionEvent anActionEvent) {
+    protected NumberType getType(Language language) {
         RadixNumberTypeProvider provider = RadixNumberTypeProvider.LANG_EP.forLanguage(language);
-        if (provider == null) return super.getType(language, anActionEvent);
+        if (provider == null) return super.getType(language);
         NumberType apply = mapper.apply(provider);
         if (apply == null) {
-            anActionEvent.getPresentation().setEnabled(false);
+//            anActionEvent.getPresentation().setEnabled(false);
             return null;
         }
-        anActionEvent.getPresentation().setEnabled(true);
+//        anActionEvent.getPresentation().setEnabled(true);
         return apply;
     }
 

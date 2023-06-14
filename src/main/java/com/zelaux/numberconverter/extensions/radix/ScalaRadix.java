@@ -11,7 +11,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ScalaRadix implements RadixNumberTypeProvider {
-    public static final NumberType binary = new RadixNumberTypeImpl(
+    public static final NumberType.RadixType binary = new RadixNumberTypeImpl(
             DefaultRadixNumberType.binary, Pattern.compile("(Integer)[\\s\n" +
             "]*(\\.)[\\s\n" +
             "]*(parseInt)[\\s\n" +
@@ -37,7 +37,7 @@ public class ScalaRadix implements RadixNumberTypeProvider {
     };
 
     @Override
-    public @Nullable NumberType binary() {
+    public @Nullable NumberType.RadixType binary() {
         return binary;
     }
 }

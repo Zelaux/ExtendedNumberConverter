@@ -35,12 +35,46 @@ public class PsiUtil {
                 return null;
             }
             if (beginElement.getTextOffset() + beginElement.getTextLength() == selectionEnd) {
-                selectionStart =beginElement.getTextOffset();
+                selectionStart = beginElement.getTextOffset();
                 element = beginElement;
             } else {
                 element = PsiTreeUtil.findCommonParent(beginElement, endElement);
             }
         }
         return element;
+    }
+
+    @Nullable
+    public static CommonPsiAndRanges getCommonPsiAndRanges(PsiElement psiElement, Language language, int selectionStart, int selectionEnd) {
+        ParserDefinition parserDefinition = LanguageParserDefinitions.INSTANCE.forLanguage(language);
+        TokenSet commentTokens = parserDefinition.getCommentTokens();
+        PsiElement element = getCommonPsi(psiElement, language, selectionStart, selectionEnd);
+        if (element == null) return null;
+        if (commentTokens.contains(element.getNode().getElementType())) {
+            int offset = element.getTextOffset();
+            return new CommonPsiAndRanges(
+                    element,
+                    selectionStart - offset,
+                    selectionEnd - offset
+            );
+        } else {
+            return new CommonPsiAndRanges(
+                    element,
+                    0,
+                    element.getTextLength()
+            );
+        }
+    }
+
+    public static final class CommonPsiAndRanges {
+        public final PsiElement element;
+        public final int inElementStart;
+        public final int inElementEnd;
+
+        public CommonPsiAndRanges(PsiElement element, int inElementStart, int inElementEnd) {
+            this.element = element;
+            this.inElementStart = inElementStart;
+            this.inElementEnd = inElementEnd;
+        }
     }
 }

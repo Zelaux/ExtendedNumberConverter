@@ -1,0 +1,42 @@
+<idea-plugin>
+    <actions>
+
+        <group
+                id="NumberManipulation.Group"
+                popup="true"
+                text="Convert Number to..."
+                description="Convert to different numeral system"
+                icon="/menu_icon.png"
+        >
+
+            <action id="NumberManipulation.Dec"
+                    class="com.zelaux.numberconverter.extensions.radix.RadixAction$DecicalConvertAction" text="To Decimal">
+            </action>
+            <action id="NumberManipulation.Hex"
+                    class="com.zelaux.numberconverter.extensions.radix.RadixAction$HexadecimalConvertAction"
+                    text="To Hexadecimal">
+            </action>
+            <action id="NumberManipulation.Oct"
+                    class="com.zelaux.numberconverter.extensions.radix.RadixAction$OctalConvertAction" text="To Octal">
+            </action>
+            <action id="NumberManipulation.Bin"
+                    class="com.zelaux.numberconverter.extensions.radix.RadixAction$BinaryConvertAction" text="To Binary">
+            </action>
+            <action id="NumberManipulation.BitShift"
+                    class="com.zelaux.numberconverter.extensions.bitshift.BitShiftAction" text="As Shifted Bits">
+            </action>
+            <action id="NumberManipulation.AsOrProduct"
+                    class="com.zelaux.numberconverter.extensions.bitshift.AsOrProductAction" text="As Or Product">
+            </action>
+            <action id="NumberManipulation.AddUnderScoreAction"
+                    class="com.zelaux.numberconverter.actions.underscore.SwitchUnderScoreAction" text="Switch Underscores"/>
+            <!--
+
+                        <action id="com.zelaux.numberconverter.DebugAction" class="com.zelaux.numberconverter.actions.DebugAction"
+                                text="DebugAction"/>
+            -->
+            <add-to-group group-id="EditorPopupMenu" anchor="after" relative-to-action="EditorToggleColumnMode"/>
+        </group>
+
+    </actions>
+</idea-plugin>

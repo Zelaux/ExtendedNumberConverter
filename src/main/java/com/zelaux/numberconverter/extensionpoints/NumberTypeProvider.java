@@ -18,6 +18,9 @@ public interface NumberTypeProvider {
     NumberType[] getNumberTypes();
 
     AnAction[] actions();
+    interface Test{
+
+    }
     ////    ColorExpParserSequence getColorExpressionFrom(@NotNull PsiElement element);
 
 }

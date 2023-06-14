@@ -14,10 +14,12 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.openapi.ui.popup.ListPopup;
-import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.wm.IdeFocusManager;
+import com.intellij.util.xmlb.annotations.Attribute;
+import com.zelaux.numberconverter.actions.ExecutionResult;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.deft.Obj;
 
 import java.awt.*;
 import java.awt.event.InputEvent;
@@ -25,20 +27,18 @@ import java.awt.event.InputEvent;
  * @see <a href="https://github.com/krasa/StringManipulation/blob/master/src/main/java/osmedile/intellij/stringmanip/PopupChoiceAction.java">Reference</a>
  * */
 public class PopupChoiceAction extends MyEditorAction {
-
-    public PopupChoiceAction(EditorActionHandler defaultHandler) {
-        super(defaultHandler);
-    }
+    @Attribute("actionGroupId")
+    public String actionGroupId;
 
     public PopupChoiceAction() {
-        super(new MyEditorWriteActionHandler() {
-            @NotNull
+        super(null);
+        setupHandler(new MyEditorWriteActionHandler<>(this) {
             @Override
-            protected Pair beforeWriteAction(Editor editor, DataContext dataContext) {
+            protected ExecutionResult<Object> beforeWriteAction(Editor editor, DataContext dataContext) {
                 if (editor instanceof EditorEx) {
                     dataContext = ((EditorEx) editor).getDataContext();
                 }//Evaluate compile-time expression checked
-                ListPopup popup = JBPopupFactory.getInstance().createActionGroupPopup(null, (ActionGroup) CustomActionsSchema.getInstance().getCorrectedAction("NumberConverter.Group"),
+                ListPopup popup = JBPopupFactory.getInstance().createActionGroupPopup(null, (ActionGroup) CustomActionsSchema.getInstance().getCorrectedAction("NumberManipulation.Group"),
                         dataContext, JBPopupFactory.ActionSelectionAid.ALPHA_NUMBERING, true);
 
                 popup.showInBestPositionFor(dataContext);
@@ -53,7 +53,7 @@ public class PopupChoiceAction extends MyEditorAction {
     }
 
     @Override
-    public void update(AnActionEvent e) {
+    public void update(@NotNull AnActionEvent e) {
         super.update(e);
         Editor editor = CommonDataKeys.EDITOR.getData(e.getDataContext());
         if (editor == null) {
@@ -69,8 +69,8 @@ public class PopupChoiceAction extends MyEditorAction {
             }
             LookupEx activeLookup = LookupManager.getInstance(project).getActiveLookup();
             boolean dialogOpen = isFromDialog(project);
-            boolean popupCheck = activeLookup == null || (activeLookup != null && !onlyAltDown);
-            boolean dialogCheck = !dialogOpen || (dialogOpen && !onlyAltDown);
+            boolean popupCheck = activeLookup == null || !onlyAltDown;
+            boolean dialogCheck = !dialogOpen || !onlyAltDown;
             e.getPresentation().setEnabled((popupCheck && dialogCheck));
         }
     }
