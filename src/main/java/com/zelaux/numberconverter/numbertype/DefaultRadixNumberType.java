@@ -12,10 +12,10 @@ public enum DefaultRadixNumberType implements
         NumberType,
         NumberType.MatchByPattern,
         NumberType.RadixType {
-    Binary("Binary", "\\s*0[bB](_*[01])*\\s*", "0b", 2, it -> it.binarySeparator),
-    Octal("Octal", "\\s*0[0-7](_*[0-7])*\\s*", "0", 8, it -> it.octalSeparator),
-    Decimal("Decimal", "\\s*(0|[1-9](_*[0-9])*)\\s*", "", 10, it -> it.decimalSeparator),
-    Hexadecimal("Hex", "\\s*0[xX][0-9a-fA-F](_*[0-9a-fA-F])*\\s*", "0x", 16, it -> it.hexSeparator),
+    Binary("To Binary", "\\s*0[bB](_*[01])*\\s*", "0b", 2, it -> it.binarySeparator),
+    Octal("To Octal", "\\s*0[0-7](_*[0-7])*\\s*", "0", 8, it -> it.octalSeparator),
+    Decimal("To Decimal", "\\s*(0|[1-9](_*[0-9])*)\\s*", "", 10, it -> it.decimalSeparator),
+    Hexadecimal("To Hex", "\\s*0[xX][0-9a-fA-F](_*[0-9a-fA-F])*\\s*", "0x", 16, it -> it.hexSeparator),
     ;
     public final ToInt<MySettingsState> spacing;
     public final String title;

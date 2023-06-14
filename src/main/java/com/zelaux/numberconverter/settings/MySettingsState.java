@@ -46,6 +46,7 @@ public class MySettingsState implements PersistentStateComponent<MySettingsState
     public OutputCase outputCase = OutputCase.UpperCase;
 
     public MySettingsState() {
+        int i=0;
     }
 
     public static MySettingsState getInstance() {

@@ -185,9 +185,13 @@ public class ConvertAction extends MyEditorAction {
         List<Caret> caretList = editor.getCaretModel().getAllCarets();
 
 
-        final NumberType numberType = getType(language);
-        anActionEvent.getPresentation().setEnabledAndVisible(!caretList.isEmpty() && numberType!=null);
+        anActionEvent.getPresentation().setEnabledAndVisible(!caretList.isEmpty());
         if (!anActionEvent.getPresentation().isVisible()) {
+            return;
+        }
+        final NumberType numberType = getType(language);
+        if (numberType == null) {
+            anActionEvent.getPresentation().setEnabled(false);
             return;
         }
 
@@ -203,7 +207,7 @@ public class ConvertAction extends MyEditorAction {
                 text.append(" (carets ").append(caretList.size()).append(")");
             }
         } else {
-            text.append(": Error(").append(error.getError()+")");
+            text.append(": Error(").append(error.getError() + ")");
         }
 
         anActionEvent.getPresentation().setText(text.toString());

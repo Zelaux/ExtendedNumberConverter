@@ -12,7 +12,12 @@ public abstract class ShiftRadix {
     public static ShiftRadix of(DefaultRadixNumberType defaultRadixNumberType) {
         return all[defaultRadixNumberType.ordinal()];
     }
-
+    /**
+     * for xml parsing
+     */
+    public static ShiftRadix fromText(String string){
+        return of(DefaultRadixNumberType.valueOf(string));
+    }
     @Override
     public String toString() {
         return delegate.name();

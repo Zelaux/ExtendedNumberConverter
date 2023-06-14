@@ -4,6 +4,9 @@ import com.zelaux.numberconverter.NumberContainer
 import com.zelaux.numberconverter.numbertype.NumberType
 import com.zelaux.numberconverter.numbertype.PsiResult
 import com.zelaux.numberconverter.utils.PsiUtil
+import com.zelaux.numberconverter.utils.findChildByClass
+import com.zelaux.numberconverter.utils.findChildByType
+import org.jetbrains.kotlin.KtNodeTypes
 import org.jetbrains.kotlin.idea.KotlinLanguage
 import org.jetbrains.kotlin.psi.*
 import java.math.BigInteger
@@ -27,15 +30,15 @@ class KotlinBitShift : DefaultBitShift(makeExtra("shl", "shr", "ushr")) {
         bitShiftType: BitShiftType,
     ): PsiResult {
         val result = super.wrapShift(container, expression, shift, bitShiftType)
-        if (result.text.matches(Regex("\\([^()]\\)")))return result
+        if (result.text.matches(Regex("\\([^()]\\)"))) return result
         result.mutateText('('.toString() + result.text + ')')
         return result
     }
 
     override fun wrapOr(container: NumberContainer, left: PsiResult, right: PsiResult): PsiResult {
-        if(right.text.matches(Regex("\\([^()]\\)"))){
+        if (right.text.matches(Regex("\\([^()]\\)"))) {
             return left.mutateText(left.text + " or " + right.text)
-        } else{
+        } else {
             return left.mutateText(left.text + " or (" + right.text + ")")
         }
     }
@@ -51,10 +54,10 @@ class KotlinBitShift : DefaultBitShift(makeExtra("shl", "shr", "ushr")) {
             container.language,
             inElementStart,
             inElementEnd
-        ) as KtBinaryExpression
-        val left=element.left?.toContainer()!!.parse();
-        val right=element.right?.toContainer()!!.parse();
-        return Result(right.toInt(),left)
+        ).let { it as KtExpression }.unwrapBrackets()!!.parse()
+        val left = element.first;
+        val right = element.second;
+        return Result(right.toInt(), left)
     }
 
     override fun matchShift(
@@ -63,7 +66,7 @@ class KotlinBitShift : DefaultBitShift(makeExtra("shl", "shr", "ushr")) {
         inElementEnd: Int,
         bitShiftType: BitShiftType,
     ): Boolean {
-        return matchOperator(container,inElementStart,inElementEnd,bitShiftTypeExtra[bitShiftType.ordinal].literal)
+        return matchOperator(container, inElementStart, inElementEnd, bitShiftTypeExtra[bitShiftType.ordinal].literal)
     }
 
 
@@ -73,16 +76,13 @@ class KotlinBitShift : DefaultBitShift(makeExtra("shl", "shr", "ushr")) {
         }
 
 
-
         override fun parse(container: NumberContainer, inElementStart: Int, inElementEnd: Int): BigInteger {
-            val element = PsiUtil.getCommonPsi(
+            return PsiUtil.getCommonPsi(
                 container.element,
                 container.language,
                 inElementStart,
                 inElementEnd
-            ) as KtBinaryExpression
-
-            return element.left?.toContainer()!!.parse().or(element.right?.toContainer()!!.parse())
+            ).let { it as KtExpression }.unwrapBrackets()!!.parse().let { it.first.or(it.second) }
 
         }
 
@@ -97,31 +97,76 @@ class KotlinBitShift : DefaultBitShift(makeExtra("shl", "shr", "ushr")) {
         inElementEnd: Int,
         operatorWord: String,
     ): Boolean {
-        val element = PsiUtil.getCommonPsi(
+        return PsiUtil.getCommonPsi(
             container.element,
             container.language,
             inElementStart,
             inElementEnd
-        ) as? KtBinaryExpression ?: return false
-        val operationReferenceIdentifier = try {
-            element.operationReference
-        } catch (npe: NullPointerException) {
-            null
-        }?.getIdentifier() ?: return false
-
-        /*if (operationReferenceIdentifier != KtTokens.IDENTIFIER) {
-                return false
-            }*/
-        if (operationReferenceIdentifier.text != operatorWord) return false
-
-        element.left?.toContainer() ?: return false;
-        element.right?.toContainer() ?: return false;
-        return true
+        )?.let { it as? KtExpression }?.unwrapBrackets()?.matches(operatorWord) ?: false
     }
-    fun KtExpression.toContainer(first: Boolean = true): NumberContainer? {
-        if (first && this is KtParenthesizedExpression) {
-            return this.expression?.toContainer()
+
+    fun KtExpression.toContainer(): NumberContainer? {
+        return NumberContainer.createOrNull(unwrapBrackets(), 0, textLength, KotlinLanguage.INSTANCE)
+    }
+
+    fun KtExpression.unwrapBrackets(): KtExpression? {
+        if (this is KtParenthesizedExpression) {
+            return this.expression?.unwrapBrackets()
         }
-        return NumberContainer.createOrNull(this, 0,  textLength, KotlinLanguage.INSTANCE)
+        return this;
+    }
+
+    private fun KtExpression.matches(operatorWord: String): Boolean {
+
+        if (this is KtBinaryExpression) {
+            val operationReferenceIdentifier = try {
+                this.operationReference
+            } catch (npe: NullPointerException) {
+                null
+            }?.getIdentifier() ?: return false
+
+            /*if (operationReferenceIdentifier != KtTokens.IDENTIFIER) {
+                    return false
+                }*/
+            if (operationReferenceIdentifier.text != operatorWord) return false
+
+            this.left?.toContainer() ?: return false;
+            this.right?.toContainer() ?: return false;
+            return true
+        } else if (this is KtDotQualifiedExpression) {
+
+
+            val callExpression = findChildByType<KtCallExpression>(KtNodeTypes.CALL_EXPRESSION) ?: return false
+            val referenceExpression = callExpression
+                .findChildByType<KtNameReferenceExpression>(KtNodeTypes.REFERENCE_EXPRESSION)
+                ?.getIdentifier()?.text
+            if(referenceExpression != operatorWord)return false;
+            val type = callExpression
+                .findChildByType<KtValueArgumentList>(KtNodeTypes.VALUE_ARGUMENT_LIST)
+                ?.arguments?.get(0)
+                ?.findChildByClass<KtExpression>()
+                ?.toContainer() ?: return false
+            val receiver = receiverExpression.toContainer() ?: return false;
+            return true
+        }
+        return false;
+    }
+
+    private fun KtExpression.parse(): Pair<BigInteger, BigInteger> {
+        if (this is KtBinaryExpression) {
+            return left?.toContainer()!!.parse() to right?.toContainer()!!.parse()
+        } else {
+            this as KtDotQualifiedExpression
+            val receiver = receiverExpression.toContainer()!!
+            val type = findChildByType<KtCallExpression>(KtNodeTypes.CALL_EXPRESSION)!!
+                .findChildByType<KtValueArgumentList>(KtNodeTypes.VALUE_ARGUMENT_LIST)!!
+                .arguments[0]!!
+                .findChildByClass<KtExpression>()!!
+                .toContainer()!!
+            /*val referenceExpression = type
+                .findChildByType<KtNameReferenceExpression>(KtNodeTypes.REFERENCE_EXPRESSION)!!
+                .getIdentifier()!!.text*/
+            return receiver.parse() to type.parse()
+        }
     }
 }
