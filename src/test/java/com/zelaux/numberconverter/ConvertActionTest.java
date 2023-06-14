@@ -66,7 +66,7 @@ class ConvertActionTest {
                 new TestData("qwerty", null, "Can't convert DEC"),
         };
 
-        assertTestData(DefaultRadixNumberType.decimal, tests);
+        assertTestData(DefaultRadixNumberType.Decimal, tests);
     }
 
     @Test
@@ -93,7 +93,7 @@ class ConvertActionTest {
                 new TestData("qwerty", null, "Can't convert HEX"),
         };
 
-        assertTestData(DefaultRadixNumberType.hexadecimal, tests);
+        assertTestData(DefaultRadixNumberType.Hexadecimal, tests);
     }
 
     @Test
@@ -120,7 +120,7 @@ class ConvertActionTest {
                 new TestData("qwerty", null, "Can't convert OCT"),
         };
 
-        assertTestData(DefaultRadixNumberType.octal, tests);
+        assertTestData(DefaultRadixNumberType.Octal, tests);
     }
 
     @Test
@@ -147,6 +147,6 @@ class ConvertActionTest {
                 new TestData("qwerty", null, "Can't convert BIN"),
         };
 
-        assertTestData(DefaultRadixNumberType.binary, tests);
+        assertTestData(DefaultRadixNumberType.Binary, tests);
     }
 }

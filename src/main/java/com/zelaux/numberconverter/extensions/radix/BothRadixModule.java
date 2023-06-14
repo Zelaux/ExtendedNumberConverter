@@ -10,7 +10,7 @@ import java.math.BigInteger;
 import java.util.regex.Pattern;
 
 public class BothRadixModule implements RadixNumberTypeProvider {
-    public static final NumberType.RadixType octal = new RadixNumberTypeImpl(DefaultRadixNumberType.octal,
+    public static final NumberType.RadixType octal = new RadixNumberTypeImpl(DefaultRadixNumberType.Octal,
             Pattern.compile("0o?[0-7]"), "0o"
     ) {
 

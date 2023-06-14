@@ -31,26 +31,26 @@ public abstract class RadixAction extends ConvertAction {
 
     public static class DecicalConvertAction extends RadixAction {
         public DecicalConvertAction() {
-            super(DefaultRadixNumberType.decimal, RadixNumberTypeProvider::decimal);
+            super(DefaultRadixNumberType.Decimal, RadixNumberTypeProvider::decimal);
         }
 
     }
 
     public static class HexadecimalConvertAction extends RadixAction {
         public HexadecimalConvertAction() {
-            super(DefaultRadixNumberType.hexadecimal, RadixNumberTypeProvider::hexadecimal);
+            super(DefaultRadixNumberType.Hexadecimal, RadixNumberTypeProvider::hexadecimal);
         }
     }
 
     public static class OctalConvertAction extends RadixAction {
         public OctalConvertAction() {
-            super(DefaultRadixNumberType.octal, RadixNumberTypeProvider::octal);
+            super(DefaultRadixNumberType.Octal, RadixNumberTypeProvider::octal);
         }
     }
 
     public static class BinaryConvertAction extends RadixAction {
         public BinaryConvertAction() {
-            super(DefaultRadixNumberType.binary, RadixNumberTypeProvider::binary);
+            super(DefaultRadixNumberType.Binary, RadixNumberTypeProvider::binary);
         }
     }
 /*

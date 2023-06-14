@@ -16,6 +16,7 @@ repositories {
     maven { url = uri("https://jitpack.io") }
 }
 dependencies {
+    implementation("org.openjdk.nashorn:nashorn-core:15.4")
     testImplementation("org.junit.jupiter:junit-jupiter:5.8.1")
     //    implementation("edu.brown.cs.burlap:arc-burlap:3.0.1")
 }

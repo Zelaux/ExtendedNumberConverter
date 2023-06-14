@@ -7,7 +7,9 @@ import com.zelaux.numberconverter.extensionpoints.RadixNumberTypeProvider;
 import com.zelaux.numberconverter.numbertype.DefaultRadixNumberType;
 import com.zelaux.numberconverter.numbertype.NumberType;
 import com.zelaux.numberconverter.numbertype.PsiResult;
+import com.zelaux.numberconverter.settings.MySettingsState;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.math.BigInteger;
 
@@ -31,25 +33,25 @@ public abstract class BitShiftNumberTypeProvider implements NumberTypeProvider {
 
         @Override
         public boolean match(NumberContainer container, int inElementStart, int inElementEnd) {
-            String value=container.getText(inElementStart, inElementEnd);
+            String value = container.getText(inElementStart, inElementEnd);
             int index = value.indexOf(orSeperator());
             if (index == -1) return false;
-            NumberType left = NumberType.of(container, inElementStart,inElementStart+index);
+            NumberType left = NumberType.of(container, inElementStart, inElementStart + index);
             if (left == null) return false;
-            NumberType right = NumberType.of(container, inElementStart+index+1,inElementEnd);
+            NumberType right = NumberType.of(container, inElementStart + index + 1, inElementEnd);
             if (right == null) return false;
             return true;
         }
 
         @Override
         public BigInteger parse(NumberContainer container, int inElementStart, int inElementEnd) {
-            String value=container.getText(inElementStart, inElementEnd);
+            String value = container.getText(inElementStart, inElementEnd);
             int index = value.indexOf(orSeperator());
-            NumberType left = NumberType.of(container, inElementStart,inElementStart+index);
-            NumberType right = NumberType.of(container, inElementStart+index+1,inElementEnd);
-            return left.parse(container, inElementStart,inElementStart+index)
+            NumberType left = NumberType.of(container, inElementStart, inElementStart + index);
+            NumberType right = NumberType.of(container, inElementStart + index + 1, inElementEnd);
+            return left.parse(container, inElementStart, inElementStart + index)
                     .or(
-                            right.parse(container, inElementStart+index+1,inElementEnd)
+                            right.parse(container, inElementStart + index + 1, inElementEnd)
                     );
         }
 
@@ -59,11 +61,11 @@ public abstract class BitShiftNumberTypeProvider implements NumberTypeProvider {
             int length = integer.bitLength();
             int offset = integer.getLowestSetBit();
             PsiResult ONE = container.psiFromText("1");
-            PsiResult begin=wrapShift(container, ONE, offset, BitShiftType.leftShift);
-            for (int i = offset+1; i <= length; i++) {
+            PsiResult begin = wrapShift(container, ONE, offset, BitShiftType.leftShift);
+            for (int i = offset + 1; i <= length; i++) {
                 if (integer.testBit(i)) {
                     PsiResult wrapped = wrapShift(container, ONE.copy(), i, BitShiftType.leftShift);
-                    begin= wrapOr(container, begin, wrapped);
+                    begin = wrapOr(container, begin, wrapped);
                 }
             }
             return begin;
@@ -150,17 +152,38 @@ public abstract class BitShiftNumberTypeProvider implements NumberTypeProvider {
         @Override
         public PsiResult wrap(NumberContainer container, BigInteger integer) {
             int offset = integer.getLowestSetBit();
-            NumberType mapper = getBinary(container);
+            NumberType mapper = getPreferredType(container);
             PsiResult wrapped = mapper.wrap(container, integer.shiftRight(offset));
+            if (offset == 0) return wrapped;
             return BitShiftNumberTypeProvider.this.wrapShift(container, wrapped, offset, BitShiftType.leftShift);
         }
-@NotNull
-        private NumberType getBinary(NumberContainer container) {
+
+        @NotNull
+        private NumberType getPreferredType(NumberContainer container) {
             RadixNumberTypeProvider value = RadixNumberTypeProvider.LANG_EP.forLanguage(container.language);
-            if(value==null)return DefaultRadixNumberType.binary;
-    NumberType binary = value.binary();
-    if(binary==null)return value.decimal();
-    return binary;
+            DefaultRadixNumberType shiftRadix = MySettingsState.getInstance().shiftRadix.delegate;
+            if (value == null) {
+                return shiftRadix;
+            }
+            NumberType preferredType = getPreferredType(value, shiftRadix);
+            if (preferredType == null) return value.decimal();
+            return preferredType;
+        }
+
+        @Nullable
+        private NumberType getPreferredType(RadixNumberTypeProvider provider, DefaultRadixNumberType shiftRadix) {
+            switch (shiftRadix) {
+                case Binary:
+                    return provider.binary();
+                case Octal:
+                    return provider.octal();
+                case Decimal:
+                    return provider.decimal();
+                case Hexadecimal:
+                    return provider.hexadecimal();
+                default:
+                    throw new IllegalStateException("Unexpected value: " + shiftRadix);
+            }
         }
     }
 
@@ -169,7 +192,7 @@ public abstract class BitShiftNumberTypeProvider implements NumberTypeProvider {
 
     public abstract Result getShift(NumberContainer container, int inElementStart, int inElementEnd, BitShiftType bitShiftType);
 
-   public static class Result {
+    public static class Result {
         int shift;
         BigInteger valueToShift;
 

@@ -1,7 +1,6 @@
 package com.zelaux.numberconverter.numbertype;
 
 import com.intellij.lang.Language;
-import com.intellij.psi.PsiElement;
 import com.intellij.util.IntPair;
 import com.zelaux.numberconverter.NumberContainer;
 import com.zelaux.numberconverter.extensionpoints.NumberTypeProvider;
@@ -55,10 +54,10 @@ class NumberTypeContainer {
         EnumMap<DefaultRadixNumberType, NumberType.RadixType> enumMap = new EnumMap<>(DefaultRadixNumberType.class);
         defaultRadixTypes.put(language.getID(), enumMap);
         if (radixNumberTypeProvider != null) {
-            addIfNotNull(list, enumMap, DefaultRadixNumberType.decimal, radixNumberTypeProvider.decimal());
-            addIfNotNull(list, enumMap, DefaultRadixNumberType.binary, radixNumberTypeProvider.binary());
-            addIfNotNull(list, enumMap, DefaultRadixNumberType.octal, radixNumberTypeProvider.octal());
-            addIfNotNull(list, enumMap, DefaultRadixNumberType.hexadecimal, radixNumberTypeProvider.hexadecimal());
+            addIfNotNull(list, enumMap, DefaultRadixNumberType.Decimal, radixNumberTypeProvider.decimal());
+            addIfNotNull(list, enumMap, DefaultRadixNumberType.Binary, radixNumberTypeProvider.binary());
+            addIfNotNull(list, enumMap, DefaultRadixNumberType.Octal, radixNumberTypeProvider.octal());
+            addIfNotNull(list, enumMap, DefaultRadixNumberType.Hexadecimal, radixNumberTypeProvider.hexadecimal());
         }
         if (shouldAddAny) {
 
@@ -106,7 +105,7 @@ public interface NumberType {
     final Pattern numberPattern = Pattern.compile("[1-9][0-9]*");
 
     default boolean isDecimal() {
-        return this == DefaultRadixNumberType.decimal;
+        return this == DefaultRadixNumberType.Decimal;
     }
 
     @Nullable

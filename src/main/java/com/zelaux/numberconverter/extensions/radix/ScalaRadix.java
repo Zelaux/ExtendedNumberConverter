@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 
 public class ScalaRadix implements RadixNumberTypeProvider {
     public static final NumberType.RadixType binary = new RadixNumberTypeImpl(
-            DefaultRadixNumberType.binary, Pattern.compile("(Integer)[\\s\n" +
+            DefaultRadixNumberType.Binary, Pattern.compile("(Integer)[\\s\n" +
             "]*(\\.)[\\s\n" +
             "]*(parseInt)[\\s\n" +
             "]*\\([\\s\n" +

@@ -12,10 +12,10 @@ public enum DefaultRadixNumberType implements
         NumberType,
         NumberType.MatchByPattern,
         NumberType.RadixType {
-    binary("Binary", "\\s*0[bB](_*[01])*\\s*", "0b", 2, it -> it.binarySeparator),
-    octal("Octal", "\\s*0[0-7](_*[0-7])*\\s*", "0", 8, it -> it.octalSeparator),
-    decimal("Decimal", "\\s*(0|[1-9](_*[0-9])*)\\s*", "", 10, it -> it.decimalSeparator),
-    hexadecimal("Hex", "\\s*0[xX][0-9a-fA-F](_*[0-9a-fA-F])*\\s*", "0x", 16, it -> it.hexSeparator),
+    Binary("Binary", "\\s*0[bB](_*[01])*\\s*", "0b", 2, it -> it.binarySeparator),
+    Octal("Octal", "\\s*0[0-7](_*[0-7])*\\s*", "0", 8, it -> it.octalSeparator),
+    Decimal("Decimal", "\\s*(0|[1-9](_*[0-9])*)\\s*", "", 10, it -> it.decimalSeparator),
+    Hexadecimal("Hex", "\\s*0[xX][0-9a-fA-F](_*[0-9a-fA-F])*\\s*", "0x", 16, it -> it.hexSeparator),
     ;
     public final ToInt<MySettingsState> spacing;
     public final String title;
@@ -77,7 +77,7 @@ public enum DefaultRadixNumberType implements
     @Override
     public PsiResult wrap(NumberContainer container, BigInteger integer) {
 
-        if (integer.signum() < 0 && this != decimal) {
+        if (integer.signum() < 0 && this != Decimal) {
             int bitCount = integer.bitCount();
             int p2 = Integer.highestOneBit(bitCount - 1) * 2;
 

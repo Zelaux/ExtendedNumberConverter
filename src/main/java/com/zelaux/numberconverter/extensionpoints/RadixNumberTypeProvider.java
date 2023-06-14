@@ -21,22 +21,22 @@ public interface RadixNumberTypeProvider {
 
     @Nullable
     default NumberType.RadixType hexadecimal() {
-        return DefaultRadixNumberType.hexadecimal;
+        return DefaultRadixNumberType.Hexadecimal;
     }
 
     @Nullable
     default NumberType.RadixType octal() {
-        return DefaultRadixNumberType.octal;
+        return DefaultRadixNumberType.Octal;
     }
 
     @NotNull
     default NumberType.RadixType decimal() {
-        return DefaultRadixNumberType.decimal;
+        return DefaultRadixNumberType.Decimal;
     }
 
     @Nullable
     default NumberType.RadixType binary() {
-        return DefaultRadixNumberType.binary;
+        return DefaultRadixNumberType.Binary;
     }
 
     class RadixNumberTypeImpl implements NumberType, NumberType.RadixType, NumberType.MatchByPattern {

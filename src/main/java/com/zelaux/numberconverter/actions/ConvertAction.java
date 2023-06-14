@@ -185,11 +185,11 @@ public class ConvertAction extends MyEditorAction {
         List<Caret> caretList = editor.getCaretModel().getAllCarets();
 
 
-        anActionEvent.getPresentation().setEnabledAndVisible(!caretList.isEmpty());
-        if (!anActionEvent.getPresentation().isVisible())
-            return;
         final NumberType numberType = getType(language);
-        if (numberType == null) return;
+        anActionEvent.getPresentation().setEnabledAndVisible(!caretList.isEmpty() && numberType!=null);
+        if (!anActionEvent.getPresentation().isVisible()) {
+            return;
+        }
 
         Result<NumberContainer, String> error = findError(IdeUtils.PsiFile.from(editor), caretList, language);
         StringBuilder text = new StringBuilder(numberType.title());
