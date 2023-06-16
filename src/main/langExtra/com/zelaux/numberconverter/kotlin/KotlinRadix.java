@@ -45,7 +45,6 @@ public class KotlinRadix extends NoOctalRadix {
             if (element.getNode().getElementType() != KtTokens.INTEGER_LITERAL) {
                 return false;
             }
-            if (true) throw null;//TODO REMOVE DEBUG
             return parentType.pattern.matcher(element.getText()).matches();
         }
 
