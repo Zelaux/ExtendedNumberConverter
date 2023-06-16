@@ -1,8 +1,8 @@
 <idea-plugin>
-    <extensions defaultExtensionNs="com.zelaux.numberconverter">
+    <extensions defaultExtensionNs="NumberManipulation">
         <numberTypeProvider language="Scala"
                             implementationClass="com.zelaux.numberconverter.extensions.bitshift.DefaultBitShift"/>
         <radixNumberTypeProvider language="Scala"
-                            implementationClass="com.zelaux.numberconverter.extensions.radix.ScalaRadix"/>
+                            implementationClass="com.zelaux.numberconverter.scala.ScalaRadix"/>
     </extensions>
 </idea-plugin>

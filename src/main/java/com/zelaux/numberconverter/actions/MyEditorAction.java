@@ -1,4 +1,4 @@
-package osmedile.intellij.stringmanip;
+package com.zelaux.numberconverter.actions;
 
 
 import com.intellij.openapi.actionSystem.*;

@@ -1,5 +1,5 @@
 <idea-plugin>
-    <extensions defaultExtensionNs="com.zelaux.numberconverter">
+    <extensions defaultExtensionNs="NumberManipulation">
         <numberTypeProvider language="go"
                             implementationClass="com.zelaux.numberconverter.extensions.bitshift.TwoOnlyBitShift"/>
         <radixNumberTypeProvider language="go"

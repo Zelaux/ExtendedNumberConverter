@@ -12,12 +12,11 @@ import org.jetbrains.annotations.Nullable;
 
 public interface NumberTypeProvider {
 
-    ExtensionPointName<LanguageExtensionPoint> EP_NAME = ExtensionPointName.create("com.zelaux.numberconverter.numberTypeProvider");
+    ExtensionPointName<LanguageExtensionPoint> EP_NAME = ExtensionPointName.create("NumberManipulation.numberTypeProvider");
     LanguageExtension<NumberTypeProvider> LANG_EP = new LanguageExtension<>(EP_NAME.getName());
 
     NumberType[] getNumberTypes();
 
-    AnAction[] actions();
     interface Test{
 
     }

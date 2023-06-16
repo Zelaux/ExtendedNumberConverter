@@ -2,14 +2,11 @@ package com.zelaux.numberconverter.extensions.customizers;
 
 import com.intellij.openapi.actionSystem.ActionGroup;
 import com.intellij.openapi.actionSystem.ActionManager;
-import com.intellij.openapi.actionSystem.KeyboardShortcut;
 import com.intellij.openapi.actionSystem.Presentation;
 import com.intellij.openapi.actionSystem.impl.ActionConfigurationCustomizer;
-import com.intellij.openapi.keymap.Keymap;
-import com.intellij.openapi.keymap.ex.KeymapManagerEx;
 import com.zelaux.numberconverter.extensionpoints.PopupChoiceBean;
 import org.jetbrains.annotations.NotNull;
-import osmedile.intellij.stringmanip.PopupChoiceAction;
+import com.zelaux.numberconverter.actions.PopupChoiceAction;
 
 public class PopupChoiceActionConfiguration implements ActionConfigurationCustomizer {
     @Override
@@ -21,6 +18,7 @@ public class PopupChoiceActionConfiguration implements ActionConfigurationCustom
             String text = parentGroup.getTemplatePresentation().getText();
 
             PopupChoiceAction newAction = new PopupChoiceAction();
+            newAction.actionGroupId= extension.actionGroup;
             Presentation templatePresentation = newAction.getTemplatePresentation();
             templatePresentation.setText(extension.text == null ? "Show Popup Choice For " + text : extension.text);
             if (extension.description != null) {

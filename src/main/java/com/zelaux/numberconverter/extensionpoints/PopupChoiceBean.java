@@ -15,7 +15,7 @@ import java.util.List;
 
 @Property(style = Property.Style.ATTRIBUTE)
 public class PopupChoiceBean {
-    public static ExtensionPointName<PopupChoiceBean> EP_NAME = ExtensionPointName.create("com.zelaux.numberconverter.actionGroupPopup");
+    public static ExtensionPointName<PopupChoiceBean> EP_NAME = ExtensionPointName.create("NumberManipulation.actionGroupPopup");
     @Nullable
     public String text;
 

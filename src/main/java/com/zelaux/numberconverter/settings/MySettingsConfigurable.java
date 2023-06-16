@@ -1,6 +1,7 @@
 package com.zelaux.numberconverter.settings;
 
 import com.intellij.openapi.options.*;
+import com.zelaux.numberconverter.Vars;
 import com.zelaux.numberconverter.settings.processor.ISettingComponent;
 import org.jetbrains.annotations.*;
 
@@ -16,7 +17,7 @@ public class MySettingsConfigurable implements Configurable{
     @Nls(capitalization = Nls.Capitalization.Title)
     @Override
     public String getDisplayName(){
-        return "Number Manipulation";
+        return Vars.pluginName;
     }
 
     @Override

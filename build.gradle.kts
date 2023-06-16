@@ -17,6 +17,7 @@ repositories {
 }
 dependencies {
     implementation("org.openjdk.nashorn:nashorn-core:15.4")
+    implementation("com.github.Anuken.Arc:arc-core:v144")
     testImplementation("org.junit.jupiter:junit-jupiter:5.8.1")
     //    implementation("edu.brown.cs.burlap:arc-burlap:3.0.1")
 }
@@ -51,28 +52,17 @@ intellij {
 ////            "nl.rubensten.texifyidea:0.7.26"
         )
     )
-}
+}//com.zelaux.numberconverter
 sourceSets {
     main {
         java {
-            srcDirs += arrayOf("src/main/java").map { file(it) }
-            srcDirs += arrayOf("src/main/kotlin").map { file(it) }
-        }
-    }
-}
-tasks.register("copyPlugin") {
-    dependsOn("prepareSandbox")
-    doFirst {
-//        delete(file("D:\\my apps\\IntelliJ IDEA Community Edition 2022.2\\plugins\\ZelauxArcPlugin"))
-    }
-    doLast {
-//        FileUtils
-        copy {
-            from(File("build/idea-sandbox/ZelauxArcPlugin")) {
-                include("/**")
+            println("srcDirs_0: ${srcDirs.joinToString()}")
+            srcDirs.clear()
+            mutableSetOf("src/main/java","src/main/langExtra","src/main/kotlin").forEach {
+                java.srcDir(it)
+
             }
-            into(File("D:/my apps/IntelliJ IDEA Community Edition 2022.2/plugins/ZelauxArcPlugin"))
-            println(file("D:\\my apps\\IntelliJ IDEA Community Edition 2022.2\\plugins\\ZelauxArcPlugin").absolutePath)
+            println("srcDirs_1: ${srcDirs}")
         }
     }
 }

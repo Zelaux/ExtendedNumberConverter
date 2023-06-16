@@ -1,6 +1,5 @@
 package com.zelaux.numberconverter.extensions.bitshift;
 
-import com.intellij.openapi.actionSystem.AnAction;
 import com.zelaux.numberconverter.NumberContainer;
 import com.zelaux.numberconverter.extensionpoints.NumberTypeProvider;
 import com.zelaux.numberconverter.extensionpoints.RadixNumberTypeProvider;
@@ -82,13 +81,6 @@ public abstract class BitShiftNumberTypeProvider implements NumberTypeProvider {
     }
 
 
-    @Override
-    public AnAction[] actions() {
-
-        return new AnAction[]{
-        };
-    }
-
     protected final NumberType[] numberTypes = generateNumberTypes();
 
     @NotNull
@@ -117,8 +109,8 @@ public abstract class BitShiftNumberTypeProvider implements NumberTypeProvider {
         }
 
         @Override
-        public boolean match(NumberContainer value, int inElementStart, int inElementEnd) {
-            return BitShiftNumberTypeProvider.this.matchShift(value, inElementStart, inElementEnd, bitShiftType);
+        public boolean match(NumberContainer container, int inElementStart, int inElementEnd) {
+            return BitShiftNumberTypeProvider.this.matchShift(container, inElementStart, inElementEnd, bitShiftType);
         }
 
         @Override

@@ -9,6 +9,8 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.zelaux.numberconverter.NumberContainer;
+import com.zelaux.numberconverter.exceptions.MyException;
+import com.zelaux.numberconverter.highlight.MyHighlightManager;
 import com.zelaux.numberconverter.numbertype.NumberType;
 import com.zelaux.numberconverter.Result;
 import com.zelaux.numberconverter.numbertype.PsiResult;
@@ -16,9 +18,8 @@ import com.zelaux.numberconverter.utils.IdeUtils;
 import com.zelaux.numberconverter.utils.MyFormatUtil;
 import com.zelaux.numberconverter.utils.PsiUtil;
 import org.jetbrains.annotations.NotNull;
-import osmedile.intellij.stringmanip.MyEditorAction;
-import osmedile.intellij.stringmanip.MyEditorWriteActionHandler;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ConvertAction extends MyEditorAction {
@@ -78,7 +79,7 @@ public class ConvertAction extends MyEditorAction {
 
         public static boolean trySet(PsiFile psiFile, Language language, Caret caret) {
             int selectionStart = caret.getSelectionStart();
-            int selectionEnd = caret.getSelectionEnd() - 1;
+            int selectionEnd = caret.getSelectionEnd();
             PsiUtil.CommonPsiAndRanges element = PsiUtil.getCommonPsiAndRanges(psiFile, language, selectionStart, selectionEnd);
             if (element == null) return false;
             PsiElementAtCater.element = element.element;
@@ -93,24 +94,31 @@ public class ConvertAction extends MyEditorAction {
 
     public Result<NumberContainer, String> parseNumber(PsiFile file, Caret caret, Language language) {
 
-        if (!PsiElementAtCater.trySet(file, language, caret)) {
-            String message = "Cannot find target";
-            return new Result.Error<>(message);
-        }
-        PsiElement element = PsiElementAtCater.element;
-        int inElementStart = PsiElementAtCater.inElementStart;
-        int inElementEnd = PsiElementAtCater.inElementEnd;
-        PsiElementAtCater.reset();
+        PsiElement element=null;
+        int inElementStart=-1;
+        int inElementEnd=-1;
         try {
-            return new Result.Success<>(NumberContainer.create(element, inElementStart, inElementEnd, language));
-        } catch (NumberFormatException e) {
-            String message = "Cannot parse '" + element.getText() + "'";
-            return new Result.Error<>(message);
+            if (!PsiElementAtCater.trySet(file, language, caret)) {
+                String message = "Cannot find target";
+                return new Result.Error<>(message);
+            }
+            element = PsiElementAtCater.element;
+            inElementStart = PsiElementAtCater.inElementStart;
+            inElementEnd = PsiElementAtCater.inElementEnd;
+            PsiElementAtCater.reset();
+            try {
+                return new Result.Success<>(NumberContainer.create(element, inElementStart, inElementEnd, language));
+            } catch (NumberFormatException e) {
+                String message = "Cannot parse '" + element.getText() + "'";
+                return new Result.Error<>(message);
+            }
+        } catch (Exception e) {
+            throw new MyException(element,inElementStart,inElementEnd,language,e);
         }
     }
 
 
-    private Result<NumberContainer, String> findError(PsiFile file, @NotNull List<Caret> caretList, Language language) {
+    private Result<NumberContainer, String> findError(PsiFile file, @NotNull List<Caret> caretList, Language language, List<NumberContainer> parsed) {
 
         Result<NumberContainer, String> value = null;
 
@@ -119,6 +127,8 @@ public class ConvertAction extends MyEditorAction {
             PsiElementAtCater.reset();
             if (value.isError()) {
                 return value;
+            } else {
+                parsed.add(value.unwrap());
             }
         }
 
@@ -143,7 +153,6 @@ public class ConvertAction extends MyEditorAction {
 
        /* WriteCommandAction.runWriteCommandAction(project, () -> {
         });*/
-
         PsiFile psiFile = PsiManager.getInstance(project).findFile(virtualFile);
         for (Caret caret : caretList) {//caret.getLeadSelectionPosition()
             ;
@@ -156,10 +165,9 @@ public class ConvertAction extends MyEditorAction {
             caret.removeSelection();
             if (container != null) {
                 PsiResult replacement = container.transformPsiElement(numberType);
+                replacement.apply(document, container);
                 int elementOffset = container.element.getTextOffset();
                 int beginOffset = container.inElementStart + elementOffset;
-                int endOffset = container.inElementEnd + elementOffset;
-                document.replaceString(beginOffset, endOffset, replacement.text());
 //                    convertedNumber.replace(replacement);
 //                    int textOffset = replacement.getTextOffset();
                 caret.setSelection(beginOffset, beginOffset + replacement.textLength());
@@ -169,8 +177,8 @@ public class ConvertAction extends MyEditorAction {
 
 
         }
-    }
 
+    }
 
     @Override
     public void update(@NotNull AnActionEvent anActionEvent) {
@@ -189,15 +197,25 @@ public class ConvertAction extends MyEditorAction {
         if (!anActionEvent.getPresentation().isVisible()) {
             return;
         }
+
         final NumberType numberType = getType(language);
-        if (numberType == null) {
+        VirtualFile from = IdeUtils.VirtualFile.from(editor);
+        if (numberType == null || from != null && !from.isWritable()) {
             anActionEvent.getPresentation().setEnabled(false);
             return;
         }
 
-        Result<NumberContainer, String> error = findError(IdeUtils.PsiFile.from(editor), caretList, language);
+//        editor.getDocument().
+        ArrayList<NumberContainer> parsed = new ArrayList<>();
+        Result<NumberContainer, String> error = findError(IdeUtils.PsiFile.from(editor), caretList, language, parsed);
         StringBuilder text = new StringBuilder(numberType.title());
+
+        MyHighlightManager myHighlightManager = MyHighlightManager.getInstance(editor);
         if (!error.isError()) {
+            for (NumberContainer container : parsed) {
+                int offset = container.element.getTextOffset();
+                myHighlightManager.addHighlight(offset + container.inElementStart, offset + container.inElementEnd);
+            }
             if (caretList.size() == 1) {
                 //noinspection DataFlowIssue
                 text.append(" '").append(

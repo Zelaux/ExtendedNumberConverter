@@ -1,4 +1,4 @@
-package osmedile.intellij.stringmanip;
+package com.zelaux.numberconverter.actions;
 
 import com.intellij.codeInsight.lookup.LookupEx;
 import com.intellij.codeInsight.lookup.LookupManager;
@@ -8,26 +8,22 @@ import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.editor.actionSystem.EditorActionHandler;
 import com.intellij.openapi.editor.ex.EditorEx;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
+import com.intellij.openapi.ui.popup.JBPopupListener;
+import com.intellij.openapi.ui.popup.LightweightWindowEvent;
 import com.intellij.openapi.ui.popup.ListPopup;
 import com.intellij.openapi.wm.IdeFocusManager;
-import com.intellij.util.xmlb.annotations.Attribute;
-import com.zelaux.numberconverter.actions.ExecutionResult;
+import com.zelaux.numberconverter.highlight.MyHighlightManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.deft.Obj;
 
 import java.awt.*;
 import java.awt.event.InputEvent;
-/**
- * @see <a href="https://github.com/krasa/StringManipulation/blob/master/src/main/java/osmedile/intellij/stringmanip/PopupChoiceAction.java">Reference</a>
- * */
+
 public class PopupChoiceAction extends MyEditorAction {
-    @Attribute("actionGroupId")
     public String actionGroupId;
 
     public PopupChoiceAction() {
@@ -38,9 +34,31 @@ public class PopupChoiceAction extends MyEditorAction {
                 if (editor instanceof EditorEx) {
                     dataContext = ((EditorEx) editor).getDataContext();
                 }//Evaluate compile-time expression checked
-                ListPopup popup = JBPopupFactory.getInstance().createActionGroupPopup(null, (ActionGroup) CustomActionsSchema.getInstance().getCorrectedAction("NumberManipulation.Group"),
-                        dataContext, JBPopupFactory.ActionSelectionAid.ALPHA_NUMBERING, true);
+                ListPopup popup = JBPopupFactory.getInstance()
+                        .createActionGroupPopup(null,
+                                (ActionGroup) CustomActionsSchema.getInstance().getCorrectedAction(actionGroupId),
+                                dataContext,
+                                JBPopupFactory.ActionSelectionAid.ALPHA_NUMBERING,
+                                true,
+                                () -> {
+//                                    MyHighlightManager.getInstance(editor).removeHighlight();
+                                },
+                                -1,
+                                null,
+                                null);
 
+
+               popup.addListener(new JBPopupListener() {
+
+                    @Override
+                    public void onClosed(@NotNull LightweightWindowEvent event) {
+                        JBPopupListener.super.onClosed(event);
+                        MyHighlightManager.getInstance(editor).removeHighlight();
+                    }
+                });
+                 /*popup.addListSelectionListener(e->{
+                    MyHighlightManager.getInstance(editor).removeHighlight();
+                });*/
                 popup.showInBestPositionFor(dataContext);
                 return stopExecution();
             }
@@ -50,6 +68,18 @@ public class PopupChoiceAction extends MyEditorAction {
 
             }
         });
+    }
+
+    public static boolean isFromDialog(Project project) {
+        if (!EventQueue.isDispatchThread()) {
+            return false; //probably Search Everywhere
+        }
+        final Component owner = IdeFocusManager.getInstance(project).getFocusOwner();
+        if (owner != null) {
+            final DialogWrapper instance = DialogWrapper.findInstance(owner);
+            return instance != null;
+        }
+        return false;
     }
 
     @Override
@@ -73,17 +103,5 @@ public class PopupChoiceAction extends MyEditorAction {
             boolean dialogCheck = !dialogOpen || !onlyAltDown;
             e.getPresentation().setEnabled((popupCheck && dialogCheck));
         }
-    }
-
-    public static boolean isFromDialog(Project project) {
-        if (!EventQueue.isDispatchThread()) {
-            return false; //probably Search Everywhere
-        }
-        final Component owner = IdeFocusManager.getInstance(project).getFocusOwner();
-        if (owner != null) {
-            final DialogWrapper instance = DialogWrapper.findInstance(owner);
-            return instance != null;
-        }
-        return false;
     }
 }

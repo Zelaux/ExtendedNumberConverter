@@ -1,5 +1,6 @@
-package osmedile.intellij.stringmanip;
+package com.zelaux.numberconverter.actions;
 
+import com.intellij.lang.Language;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
@@ -9,9 +10,23 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.actionSystem.CaretSpecificDataContext;
 import com.intellij.openapi.editor.actionSystem.EditorActionHandler;
 import com.intellij.openapi.editor.actionSystem.EditorWriteActionHandler;
-import com.zelaux.numberconverter.actions.ExecutionResult;
+import com.intellij.openapi.ui.MessageType;
+import com.intellij.openapi.ui.popup.Balloon;
+import com.intellij.openapi.ui.popup.JBPopupFactory;
+import com.intellij.openapi.wm.StatusBar;
+import com.intellij.openapi.wm.WindowManager;
+import com.intellij.psi.PsiElement;
+import com.intellij.ui.awt.RelativePoint;
+import com.zelaux.numberconverter.exceptions.MyException;
+import com.zelaux.numberconverter.exceptions.MyExceptionPopupManager;
+import com.zelaux.numberconverter.highlight.MyHighlightManager;
+import com.zelaux.numberconverter.utils.IdeUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import javax.swing.event.HyperlinkEvent;
+import java.io.IOException;
+import java.net.URISyntaxException;
 
 /**
  * @see <a href="https://github.com/krasa/StringManipulation/blob/master/src/main/java/osmedile/intellij/stringmanip/MyEditorWriteActionHandler.java">Reference</a>
@@ -26,7 +41,8 @@ public abstract class MyEditorWriteActionHandler<T> extends EditorActionHandler 
         super(false);
         this.owner = owner;
     }
-    boolean isWorksInInjected(){
+
+    boolean isWorksInInjected() {
         return owner.isInInjectedContext();
     }
 
@@ -38,8 +54,8 @@ public abstract class MyEditorWriteActionHandler<T> extends EditorActionHandler 
             return true;
         }
         inCheck = true;
-        if (canRunNotForAllCaret) return super.isEnabled(editor, dataContext);
         try {
+            if (canRunNotForAllCaret) return super.isEnabled(editor, dataContext);
             if (editor == null) {
                 return false;
             }
@@ -55,6 +71,9 @@ public abstract class MyEditorWriteActionHandler<T> extends EditorActionHandler 
                 doIfEnabled(hostEditor.getCaretModel().getCurrentCaret(), dataContext, check);
             }
             return result[0];
+        } catch (MyException exception) {
+            MyExceptionPopupManager.getInstance(editor).showErrorPopup(exception);
+            return false;
         } finally {
             inCheck = false;
         }
@@ -65,7 +84,7 @@ public abstract class MyEditorWriteActionHandler<T> extends EditorActionHandler 
     private void doIfEnabled(@NotNull Caret hostCaret, @Nullable DataContext context, @NotNull CaretTask task) {
         DataContext caretContext = context == null ? null : CaretSpecificDataContext.create(context, hostCaret);
         Editor editor = hostCaret.getEditor();
-        if (isWorksInInjected()&&caretContext != null){
+        if (isWorksInInjected() && caretContext != null) {
             DataContext injectedCaretContext = AnActionEvent.getInjectedDataContext(caretContext);
             Caret injectedCaret = CommonDataKeys.CARET.getData(injectedCaretContext);
             if (injectedCaret != null && injectedCaret != hostCaret && isEnabledForCaret(injectedCaret.getEditor(), injectedCaret, injectedCaretContext)) {
@@ -81,12 +100,17 @@ public abstract class MyEditorWriteActionHandler<T> extends EditorActionHandler 
     @Override
     protected final void doExecute(final Editor editor, @Nullable final Caret caret, final DataContext dataContext) {
 
-        final @NotNull ExecutionResult<T> additionalParameter = beforeWriteAction(editor, dataContext);
-        if (additionalParameter.isEmpty()) {
-            return;
+        try {
+            final @NotNull ExecutionResult<T> additionalParameter = beforeWriteAction(editor, dataContext);
+            if (additionalParameter.isEmpty()) {
+                return;
+            }
+            delegator.additionalParameter = additionalParameter;
+            delegator.doExecute(editor, caret, dataContext);
+        } catch (MyException exception) {
+            MyExceptionPopupManager.getInstance(editor).showErrorPopup(exception);
         }
-        delegator.additionalParameter = additionalParameter;
-        delegator.doExecute(editor, caret, dataContext);
+        MyHighlightManager.getInstance(editor).removeHighlight();
     }
 
 

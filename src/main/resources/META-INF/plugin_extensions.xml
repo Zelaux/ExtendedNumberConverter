@@ -1,5 +1,5 @@
 <idea-plugin>
-    <extensions defaultExtensionNs="com.zelaux.numberconverter">
+    <extensions defaultExtensionNs="NumberManipulation">
         <actionGroupPopup
                 text="Popup Number Manipulation ..."
                 description="Popup number manipulation ..."
@@ -14,5 +14,6 @@
     <extensions defaultExtensionNs="com.intellij">
         <actionConfigurationCustomizer
                 implementation="com.zelaux.numberconverter.extensions.customizers.PopupChoiceActionConfiguration"/>
+        <colorSettingsPage implementation="com.zelaux.numberconverter.extensions.highlight.MyColorSettingsPage"/>
     </extensions>
 </idea-plugin>

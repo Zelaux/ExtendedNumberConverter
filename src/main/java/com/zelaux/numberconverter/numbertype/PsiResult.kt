@@ -1,22 +1,48 @@
 package com.zelaux.numberconverter.numbertype
 
+import com.intellij.openapi.editor.Document
 import com.intellij.psi.PsiElement
 import com.zelaux.numberconverter.NumberContainer
 
-class PsiResult private constructor(
+open class PsiResult private constructor(
 
     @get:JvmName("context")
     val context: NumberContainer,
     text: String,
 
     ) {
+    private var text_: String? = text
+
     @get:JvmName("text")
-    var text = text
-        private set
+    val text: String
+        get() {
+            val f = text_;
+            if (f == null) {
+                val text = psiElement!!.text;
+                text_ = text
+                return text
+            }
+            return f
+        }
 
     fun copy(): PsiResult = PsiResult(context, text)
+    fun apply(document: Document, container: NumberContainer) {
+
+        val elementOffset = container.element.textOffset
+        val beginOffset = container.inElementStart + elementOffset
+        val endOffset = container.inElementEnd + elementOffset
+        document.replaceString(beginOffset, endOffset, text)
+    }
+
     fun mutateText(newText: String): PsiResult {
-        text = newText;
+        text_ = newText;
+        //psiElement=null;
+        return this;
+    }
+
+    fun mutateElement(element: PsiElement): PsiResult {
+        text_ = null;
+        this.psiElement=element;
         //psiElement=null;
         return this;
     }
@@ -25,10 +51,11 @@ class PsiResult private constructor(
         return text.length
     }
 
-    /*@get:JvmName("element")
+    @get:JvmName("element")
     @set:JvmName("element")
-    var psiElement:PsiElement?=null
-        private set*/
+    var psiElement: PsiElement? = null
+        private set
+
     companion object {
         /*@JvmStatic
         fun of(context: NumberContainer,psiElement: PsiElement)=PsiResult(context,psiElement.text).also{

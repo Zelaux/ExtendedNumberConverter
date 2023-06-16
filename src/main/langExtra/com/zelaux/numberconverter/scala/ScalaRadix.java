@@ -1,4 +1,4 @@
-package com.zelaux.numberconverter.extensions.radix;
+package com.zelaux.numberconverter.scala;
 
 import com.zelaux.numberconverter.NumberContainer;
 import com.zelaux.numberconverter.extensionpoints.RadixNumberTypeProvider;

@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
 
 public interface RadixNumberTypeProvider {
 
-    ExtensionPointName<LanguageExtensionPoint> EP_NAME = ExtensionPointName.create("com.zelaux.numberconverter.radixNumberTypeProvider");
+    ExtensionPointName<LanguageExtensionPoint> EP_NAME = ExtensionPointName.create("NumberManipulation.radixNumberTypeProvider");
     LanguageExtension<RadixNumberTypeProvider> LANG_EP = new LanguageExtension<>(EP_NAME.getName());
 
     @Nullable
@@ -39,7 +39,7 @@ public interface RadixNumberTypeProvider {
         return DefaultRadixNumberType.Binary;
     }
 
-    class RadixNumberTypeImpl implements NumberType, NumberType.RadixType, NumberType.MatchByPattern {
+     class RadixNumberTypeImpl implements NumberType, NumberType.RadixType, NumberType.MatchByPattern {
         public final DefaultRadixNumberType parentType;
         public final Pattern pattern;
         public final String prefix;

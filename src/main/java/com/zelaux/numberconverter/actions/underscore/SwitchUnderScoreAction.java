@@ -9,14 +9,15 @@ import com.intellij.psi.PsiElement;
 import com.intellij.util.IntPair;
 import com.zelaux.numberconverter.NumberContainer;
 import com.zelaux.numberconverter.actions.ExecutionResult;
+import com.zelaux.numberconverter.exceptions.MyException;
 import com.zelaux.numberconverter.numbertype.DefaultRadixNumberType;
 import com.zelaux.numberconverter.numbertype.NumberType;
 import com.zelaux.numberconverter.utils.IdeUtils;
 import com.zelaux.numberconverter.utils.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import osmedile.intellij.stringmanip.MyEditorAction;
-import osmedile.intellij.stringmanip.MyEditorWriteActionHandler;
+import com.zelaux.numberconverter.actions.MyEditorAction;
+import com.zelaux.numberconverter.actions.MyEditorWriteActionHandler;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -101,10 +102,14 @@ public class SwitchUnderScoreAction extends MyEditorAction {
     private static NumberContainer getNumberContainer(@NotNull Editor editor, @NotNull Caret caret, Language language) {
         PsiUtil.CommonPsiAndRanges element = PsiUtil.getCommonPsiAndRanges(IdeUtils.PsiFile.from(editor), language, caret.getSelectionStart(), caret.getSelectionEnd());
         if (element == null) return null;
-        NumberContainer container = NumberContainer.createOrNull(
-                element.element, element.inElementStart, element.inElementEnd, language, NumberType.getRadixTypes(language).map(Map.Entry::getValue)
-        );
-        return container;
+        try {
+            NumberContainer container = NumberContainer.createOrNull(
+                    element.element, element.inElementStart, element.inElementEnd, language, NumberType.getRadixTypes(language).map(Map.Entry::getValue)
+            );
+            return container;
+        } catch (Exception e) {
+            throw new MyException(element.element,element.inElementStart,element.inElementEnd,language,e);
+        }
     }
 
 }

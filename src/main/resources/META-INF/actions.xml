@@ -9,6 +9,10 @@
                 icon="/menu_icon.png"
         >
 
+            <action id="NumberManipulation.EmptyAction"
+                    class="com.zelaux.numberconverter.actions.EmptyContertAction" text="_">
+            </action>
+
             <action id="NumberManipulation.Dec"
                     class="com.zelaux.numberconverter.extensions.radix.RadixAction$DecicalConvertAction" text="To Decimal">
             </action>

@@ -1,5 +1,5 @@
 <idea-plugin  xmlns:xi="http://www.w3.org/2001/XInclude">
-    <id>com.zelaux.numberconverter</id>
+    <id>NumberManipulation</id>
     <name>Number Manipulation</name>
     <version>1.6.0</version>
     <vendor url="https://github.com/Zelaux">Zelaux</vendor>
@@ -95,7 +95,13 @@
                         dynamic="true"
                         beanClass="com.intellij.lang.LanguageExtensionPoint">
             <with attribute="implementationClass"
-                  implements="com.zelaux.numberconverter.extensionpoints.NumberTypeProvider$Test"/>
+                  implements="com.zelaux.numberconverter.extensionpoints.NumberTypeProvider"/>
+        </extensionPoint>
+        <extensionPoint name="commonPsiResolver"
+                        dynamic="true"
+                        beanClass="com.intellij.lang.LanguageExtensionPoint">
+            <with attribute="implementationClass"
+                  implements="com.zelaux.numberconverter.extensionpoints.CommonPsiResolver"/>
         </extensionPoint>
         <extensionPoint name="radixNumberTypeProvider"
                         dynamic="true"

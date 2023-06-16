@@ -130,7 +130,7 @@ public interface NumberType {
         return numberType.parse(value, inElementStart, inElementEnd);
     }
 
-    boolean match(NumberContainer value, int inElementStart, int inElementEnd);
+    boolean match(NumberContainer container, int inElementStart, int inElementEnd);
 
     BigInteger parse(NumberContainer container, int inElementStart, int inElementEnd);
 
@@ -161,8 +161,8 @@ public interface NumberType {
         Pattern pattern();
 
         @Override
-        default boolean match(NumberContainer value, int inElementStart, int inElementEnd) {
-            return pattern().matcher(value.getText(inElementStart, inElementEnd)).matches();
+        default boolean match(NumberContainer container, int inElementStart, int inElementEnd) {
+            return pattern().matcher(container.getText(inElementStart, inElementEnd)).matches();
         }
     }
 
